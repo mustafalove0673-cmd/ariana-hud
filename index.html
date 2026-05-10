@@ -3,89 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ARIANA</title>
+    <title>ARIANA OS</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #ffffff;
-            font-family: 'Courier New', monospace;
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html,body { width:100%; height:100%; overflow:hidden; background:#fff; font-family:'Courier New',monospace; }
 
-        .corner {
-            position: fixed;
-            width: 50px;
-            height: 50px;
-            border-color: #000;
-            z-index: 10;
-        }
-        .corner-tl { top: 15px; left: 15px; border-top: 2px solid #000; border-left: 2px solid #000; }
-        .corner-tr { top: 15px; right: 15px; border-top: 2px solid #000; border-right: 2px solid #000; }
-        .corner-bl { bottom: 15px; left: 15px; border-bottom: 2px solid #000; border-left: 2px solid #000; }
-        .corner-br { bottom: 15px; right: 15px; border-bottom: 2px solid #000; border-right: 2px solid #000; }
+        canvas { display:block; position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; }
+        .ui-layer { position:fixed; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; }
 
-        .grid-h {
-            position: fixed;
-            left: 25px; right: 25px;
-            height: 1px;
-            background: rgba(0,0,0,0.06);
-            z-index: 1;
-        }
-        .grid-h:nth-of-type(1) { top: 12.5%; }
-        .grid-h:nth-of-type(2) { top: 25%; }
-        .grid-h:nth-of-type(3) { top: 37.5%; }
-        .grid-h:nth-of-type(4) { top: 50%; }
-        .grid-h:nth-of-type(5) { top: 62.5%; }
-        .grid-h:nth-of-type(6) { top: 75%; }
-        .grid-h:nth-of-type(7) { top: 87.5%; }
+        .bar-top { position:fixed; top:0; left:0; right:0; height:32px; z-index:3; display:flex; align-items:center; justify-content:space-between; padding:0 16px; pointer-events:none; }
+        .bar-top .time { font-size:11px; color:rgba(0,0,0,0.25); letter-spacing:2px; }
+        .bar-top .info { font-size:9px; color:rgba(0,0,0,0.15); letter-spacing:1px; }
 
-        .grid-v {
-            position: fixed;
-            top: 25px; bottom: 25px;
-            width: 1px;
-            background: rgba(0,0,0,0.06);
-            z-index: 1;
-        }
-        .grid-v:nth-of-type(1) { left: 12.5%; }
-        .grid-v:nth-of-type(2) { left: 25%; }
-        .grid-v:nth-of-type(3) { left: 37.5%; }
-        .grid-v:nth-of-type(4) { left: 50%; }
-        .grid-v:nth-of-type(5) { left: 62.5%; }
-        .grid-v:nth-of-type(6) { left: 75%; }
-        .grid-v:nth-of-type(7) { left: 87.5%; }
+        .bar-bottom { position:fixed; bottom:0; left:0; right:0; height:40px; z-index:3; display:flex; align-items:center; justify-content:center; gap:24px; pointer-events:none; }
+        .bar-bottom span { font-size:9px; color:rgba(0,0,0,0.12); letter-spacing:2px; text-transform:uppercase; }
+
+        .edge-deco { position:fixed; z-index:2; pointer-events:none; }
+        .edge-deco svg { width:100%; height:100%; }
+
+        .corner-wrap { position:fixed; z-index:3; pointer-events:none; }
+        .corner-wrap svg { overflow:visible; }
     </style>
 </head>
 <body>
 
-    <div class="corner corner-tl"></div>
-    <div class="corner corner-tr"></div>
-    <div class="corner corner-bl"></div>
-    <div class="corner corner-br"></div>
+<div class="corner-wrap" style="top:12px;left:12px;width:40px;height:40px;">
+    <svg width="40" height="40"><path d="M0,40 L0,0 L40,0" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/></svg>
+</div>
+<div class="corner-wrap" style="top:12px;right:12px;width:40px;height:40px;">
+    <svg width="40" height="40"><path d="M0,0 L40,0 L40,40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/></svg>
+</div>
+<div class="corner-wrap" style="bottom:12px;left:12px;width:40px;height:40px;">
+    <svg width="40" height="40"><path d="M0,0 L0,40 L40,40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/></svg>
+</div>
+<div class="corner-wrap" style="bottom:12px;right:12px;width:40px;height:40px;">
+    <svg width="40" height="40"><path d="M40,0 L40,40 L0,40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/></svg>
+</div>
 
-    <div class="grid-h"></div><div class="grid-h"></div><div class="grid-h"></div><div class="grid-h"></div>
-    <div class="grid-h"></div><div class="grid-h"></div><div class="grid-h"></div>
+<div class="bar-top">
+    <span class="time" id="clock">00:00</span>
+    <span class="info">ARIANA · v3.2.1</span>
+</div>
 
-    <div class="grid-v"></div><div class="grid-v"></div><div class="grid-v"></div><div class="grid-v"></div>
-    <div class="grid-v"></div><div class="grid-v"></div><div class="grid-v"></div>
+<div class="bar-bottom">
+    <span>sys</span>
+    <span>◆</span>
+    <span>com</span>
+    <span>◆</span>
+    <span>nav</span>
+    <span>◆</span>
+    <span>pwr</span>
+    <span>◆</span>
+    <span>sec</span>
+</div>
 
-    <script>
-        (async function() {
-            try {
-                const cam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                cam.getTracks().forEach(t => t.stop());
-            } catch(e) {}
-            try {
-                const mic = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
-                mic.getTracks().forEach(t => t.stop());
-            } catch(e) {}
-        })();
-    </script>
+<canvas id="c"></canvas>
 
+<script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+
+    let W, H, CX, CY, scale;
+
+    function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        CX = W / 2;
+        CY = H / 2;
+        scale = Math.min(W, H) / 800;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    let t = 0;
+
+    function drawHexGrid() {
+        const size = 28 * scale;
+        const cols = Math.ceil(W / (size * 1.5)) + 2;
+        const rows = Math.ceil(H / (size * 1.732)) + 2;
+        ctx.strokeStyle = 'rgba(0,0,0,0.03)';
+        ctx.lineWidth = 0.5;
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                const cx = c * size * 1.5;
+                const cy = r * size * 1.732 + (c % 2) * size * 0.866;
+                ctx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const a = Math.PI / 3 * i - Math.PI / 6;
+                    const x = cx + size * Math.cos(a);
+                    const y = cy + size * Math.sin(a);
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+    }
+
+    function drawOrbitRing(r, aa, speed, hue) {
+        const count = 36;
+        for (let i = 0; i < count; i++) {
+            const a = (2 * Math.PI * i) / count + aa;
+            const x = CX + r * Math.cos(a);
+            const y = CY + r * Math.sin(a);
+            const s = 1 + Math.sin(a * 3 + t * 0.02) * 0.5;
+            ctx.beginPath();
+            ctx.arc(x, y, s * scale * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0,0,0,${0.06 + 0.04 * Math.sin(a + t * speed)})`;
+            ctx.fill();
+        }
+    }
+
+    function drawAura(r, alpha) {
+        const grad = ctx.createRadialGradient(CX, CY, r * 0.3, CX, CY, r);
+        grad.addColorStop(0, `rgba(0,0,0,${alpha * 0.04})`);
+        grad.addColorStop(1, `rgba(0,0,0,0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(CX, CY, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function drawRobotFace() {
+        const s = scale * 180;
+        const cx = CX, cy = CY;
+
+        // head outline
+        const grad = ctx.createRadialGradient(cx, cy - s * 0.1, s * 0.1, cx, cy, s);
+        grad.addColorStop(0, 'rgba(0,0,0,0.02)');
+        grad.addColorStop(0.7, 'rgba(0,0,0,0.04)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.01)');
+
+        ctx.save();
+
+        // outer ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, s, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // inner ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, s * 0.85, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // visor / eyes
+        const ew = s * 0.6;
+        const eh = s * 0.18;
+        const ey = cy - s * 0.08;
+
+        // eye glow
+        const eyeGrad = ctx.createRadialGradient(cx, ey, 0, cx, ey, ew);
+        eyeGrad.addColorStop(0, 'rgba(0,0,0,0.12)');
+        eyeGrad.addColorStop(0.5, 'rgba(0,0,0,0.06)');
+        eyeGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = eyeGrad;
+        ctx.fillRect(cx - ew, ey - eh, ew * 2, eh * 2);
+
+        // eye bar
+        const barW = ew * 1.6;
+        const barH = eh * 0.5;
+        ctx.beginPath();
+        ctx.roundRect(cx - barW / 2, ey - barH / 2, barW, barH, barH / 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.fill();
+
+        // eye scan line
+        const scanX = cx - barW / 2 + (barW * (0.3 + 0.4 * Math.sin(t * 0.015)));
+        ctx.beginPath();
+        ctx.moveTo(scanX, ey - barH / 2 + 1);
+        ctx.lineTo(scanX, ey + barH / 2 - 1);
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // mouth / speaker grille
+        const my = cy + s * 0.25;
+        const mw = s * 0.35;
+        const slots = 5;
+        for (let i = 0; i < slots; i++) {
+            const a = (i / (slots - 1) - 0.5) * mw;
+            const x = cx + a;
+            const sl = 3 + 2 * Math.sin(t * 0.03 + i * 0.5);
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.fillRect(x - 1, my - sl / 2, 2, sl);
+        }
+
+        // side panels
+        for (let side = -1; side <= 1; side += 2) {
+            const px = cx + side * s * 0.75;
+            const py = cy;
+
+            ctx.beginPath();
+            ctx.arc(px, py, s * 0.12, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // inner dot
+            const ds = s * 0.03 + s * 0.015 * Math.sin(t * 0.02 + side);
+            ctx.beginPath();
+            ctx.arc(px, py, ds, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fill();
+        }
+
+        // top antenna arc
+        ctx.beginPath();
+        ctx.arc(cx, cy - s * 0.1, s * 0.5, -Math.PI * 0.8, -Math.PI * 0.2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 6]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.restore();
+    }
+
+    function drawDataNodes() {
+        const nodes = [
+            { x: CX - 300 * scale, y: CY - 150 * scale },
+            { x: CX + 300 * scale, y: CY - 120 * scale },
+            { x: CX - 280 * scale, y: CY + 180 * scale },
+            { x: CX + 290 * scale, y: CY + 160 * scale },
+        ];
+        for (const n of nodes) {
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, 2 * scale, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.fill();
+
+            // line to center
+            ctx.beginPath();
+            ctx.moveTo(n.x, n.y);
+            const midX = (n.x + CX) / 2;
+            const midY = (n.y + CY) / 2 + 20 * Math.sin(t * 0.01 + n.x);
+            ctx.quadraticCurveTo(midX, midY, CX, CY);
+            ctx.strokeStyle = 'rgba(0,0,0,0.03)';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+    }
+
+    function animate() {
+        t++;
+        ctx.clearRect(0, 0, W, H);
+
+        drawHexGrid();
+        drawAura(350 * scale, 0.15);
+        drawOrbitRing(250 * scale, t * 0.003, 0.01, 0);
+        drawOrbitRing(290 * scale, -t * 0.004, -0.015, 0);
+        drawOrbitRing(210 * scale, t * 0.005, 0.02, 0);
+        drawDataNodes();
+        drawRobotFace();
+
+        requestAnimationFrame(animate);
+    }
+
+    // clock
+    function updateClock() {
+        const d = new Date();
+        const h = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        document.getElementById('clock').textContent = h + ':' + m;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // permissions
+    (async () => {
+        try {
+            const cam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            cam.getTracks().forEach(t => t.stop());
+        } catch(e) {}
+        try {
+            const mic = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            mic.getTracks().forEach(t => t.stop());
+        } catch(e) {}
+    })();
+
+    animate();
+</script>
 </body>
 </html>
