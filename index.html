@@ -18,172 +18,73 @@
             font-family: 'Courier New', monospace;
         }
 
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none;
-        }
-
         .corner {
-            position: absolute;
-            width: 60px;
-            height: 60px;
+            position: fixed;
+            width: 50px;
+            height: 50px;
             border-color: #000;
+            z-index: 10;
         }
-        .corner-tl { top: 20px; left: 20px; border-top: 3px solid #000; border-left: 3px solid #000; }
-        .corner-tr { top: 20px; right: 20px; border-top: 3px solid #000; border-right: 3px solid #000; }
-        .corner-bl { bottom: 20px; left: 20px; border-bottom: 3px solid #000; border-left: 3px solid #000; }
-        .corner-br { bottom: 20px; right: 20px; border-bottom: 3px solid #000; border-right: 3px solid #000; }
+        .corner-tl { top: 15px; left: 15px; border-top: 2px solid #000; border-left: 2px solid #000; }
+        .corner-tr { top: 15px; right: 15px; border-top: 2px solid #000; border-right: 2px solid #000; }
+        .corner-bl { bottom: 15px; left: 15px; border-bottom: 2px solid #000; border-left: 2px solid #000; }
+        .corner-br { bottom: 15px; right: 15px; border-bottom: 2px solid #000; border-right: 2px solid #000; }
 
-        .line-h {
-            position: absolute;
-            left: 30px; right: 30px;
+        .grid-h {
+            position: fixed;
+            left: 25px; right: 25px;
             height: 1px;
-            background: rgba(0,0,0,0.08);
+            background: rgba(0,0,0,0.06);
+            z-index: 1;
         }
-        .line-h:nth-of-type(1) { top: 15%; }
-        .line-h:nth-of-type(2) { top: 33%; }
-        .line-h:nth-of-type(3) { top: 50%; }
-        .line-h:nth-of-type(4) { top: 66%; }
-        .line-h:nth-of-type(5) { top: 85%; }
+        .grid-h:nth-of-type(1) { top: 12.5%; }
+        .grid-h:nth-of-type(2) { top: 25%; }
+        .grid-h:nth-of-type(3) { top: 37.5%; }
+        .grid-h:nth-of-type(4) { top: 50%; }
+        .grid-h:nth-of-type(5) { top: 62.5%; }
+        .grid-h:nth-of-type(6) { top: 75%; }
+        .grid-h:nth-of-type(7) { top: 87.5%; }
 
-        .line-v {
-            position: absolute;
-            top: 30px; bottom: 30px;
+        .grid-v {
+            position: fixed;
+            top: 25px; bottom: 25px;
             width: 1px;
-            background: rgba(0,0,0,0.08);
+            background: rgba(0,0,0,0.06);
+            z-index: 1;
         }
-        .line-v:nth-of-type(1) { left: 15%; }
-        .line-v:nth-of-type(2) { left: 33%; }
-        .line-v:nth-of-type(3) { left: 50%; }
-        .line-v:nth-of-type(4) { left: 66%; }
-        .line-v:nth-of-type(5) { left: 85%; }
-
-        .center {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            pointer-events: none;
-        }
-
-        .center .title {
-            font-size: clamp(32px, 10vw, 80px);
-            font-weight: bold;
-            color: #000;
-            letter-spacing: 8px;
-        }
-
-        .center .sub {
-            font-size: clamp(10px, 2.5vw, 18px);
-            color: rgba(0,0,0,0.3);
-            letter-spacing: 4px;
-            margin-top: 8px;
-        }
-
-        .center .status {
-            font-size: clamp(8px, 2vw, 14px);
-            color: rgba(0,0,0,0.15);
-            margin-top: 20px;
-            letter-spacing: 2px;
-        }
-
-        .status-dot {
-            display: inline-block;
-            width: 6px; height: 6px;
-            background: #000;
-            border-radius: 50%;
-            margin-right: 6px;
-            animation: blink 1.5s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
-        }
-
-        .perm-status {
-            position: absolute;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            color: rgba(0,0,0,0.12);
-            letter-spacing: 1px;
-            pointer-events: none;
-            text-align: center;
-        }
-        .perm-status span {
-            margin: 0 8px;
-        }
-        .perm-on {
-            color: rgba(0,0,0,0.3);
-        }
-
-        .crosshair {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            opacity: 0.06;
-        }
-        .crosshair::before, .crosshair::after {
-            content: '';
-            position: absolute;
-            background: #000;
-        }
-        .crosshair::before {
-            width: 1px; height: 30px;
-            top: -15px; left: 0;
-        }
-        .crosshair::after {
-            width: 30px; height: 1px;
-            top: 0; left: -15px;
-        }
+        .grid-v:nth-of-type(1) { left: 12.5%; }
+        .grid-v:nth-of-type(2) { left: 25%; }
+        .grid-v:nth-of-type(3) { left: 37.5%; }
+        .grid-v:nth-of-type(4) { left: 50%; }
+        .grid-v:nth-of-type(5) { left: 62.5%; }
+        .grid-v:nth-of-type(6) { left: 75%; }
+        .grid-v:nth-of-type(7) { left: 87.5%; }
     </style>
 </head>
 <body>
 
-    <div class="overlay">
-        <div class="corner corner-tl"></div>
-        <div class="corner corner-tr"></div>
-        <div class="corner corner-bl"></div>
-        <div class="corner corner-br"></div>
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
 
-        <div class="line-h"></div><div class="line-h"></div><div class="line-h"></div><div class="line-h"></div><div class="line-h"></div>
-        <div class="line-v"></div><div class="line-v"></div><div class="line-v"></div><div class="line-v"></div><div class="line-v"></div>
+    <div class="grid-h"></div><div class="grid-h"></div><div class="grid-h"></div><div class="grid-h"></div>
+    <div class="grid-h"></div><div class="grid-h"></div><div class="grid-h"></div>
 
-        <div class="crosshair"></div>
-    </div>
-
-    <div class="center">
-        <div class="title">ARIANA</div>
-        <div class="sub">>> QUANTUM INTERFACE <<</div>
-        <div class="status"><span class="status-dot"></span>MONITORING</div>
-    </div>
-
-    <div class="perm-status">
-        <span>CAM <span class="perm-on">●</span></span>
-        <span>MIC <span class="perm-on">●</span></span>
-        <span>24/7 ACTIVE</span>
-    </div>
+    <div class="grid-v"></div><div class="grid-v"></div><div class="grid-v"></div><div class="grid-v"></div>
+    <div class="grid-v"></div><div class="grid-v"></div><div class="grid-v"></div>
 
     <script>
-        async function requestPermissions() {
+        (async function() {
             try {
                 const cam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
                 cam.getTracks().forEach(t => t.stop());
             } catch(e) {}
-
             try {
                 const mic = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
                 mic.getTracks().forEach(t => t.stop());
             } catch(e) {}
-        }
-
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            requestPermissions();
-        }
+        })();
     </script>
 
 </body>
