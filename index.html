@@ -2,343 +2,189 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARIANA - Jarvis HUD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ARIANA</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        body {
-            background: #05050a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Courier New', monospace;
+        html, body {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            user-select: none;
+            background: #ffffff;
+            font-family: 'Courier New', monospace;
         }
-        canvas {
-            display: block;
-            border-radius: 12px;
-            box-shadow: 0 0 60px rgba(0, 100, 200, 0.1), inset 0 0 60px rgba(0, 100, 200, 0.02);
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+        }
+
+        .corner {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-color: #000;
+        }
+        .corner-tl { top: 20px; left: 20px; border-top: 3px solid #000; border-left: 3px solid #000; }
+        .corner-tr { top: 20px; right: 20px; border-top: 3px solid #000; border-right: 3px solid #000; }
+        .corner-bl { bottom: 20px; left: 20px; border-bottom: 3px solid #000; border-left: 3px solid #000; }
+        .corner-br { bottom: 20px; right: 20px; border-bottom: 3px solid #000; border-right: 3px solid #000; }
+
+        .line-h {
+            position: absolute;
+            left: 30px; right: 30px;
+            height: 1px;
+            background: rgba(0,0,0,0.08);
+        }
+        .line-h:nth-of-type(1) { top: 15%; }
+        .line-h:nth-of-type(2) { top: 33%; }
+        .line-h:nth-of-type(3) { top: 50%; }
+        .line-h:nth-of-type(4) { top: 66%; }
+        .line-h:nth-of-type(5) { top: 85%; }
+
+        .line-v {
+            position: absolute;
+            top: 30px; bottom: 30px;
+            width: 1px;
+            background: rgba(0,0,0,0.08);
+        }
+        .line-v:nth-of-type(1) { left: 15%; }
+        .line-v:nth-of-type(2) { left: 33%; }
+        .line-v:nth-of-type(3) { left: 50%; }
+        .line-v:nth-of-type(4) { left: 66%; }
+        .line-v:nth-of-type(5) { left: 85%; }
+
+        .center {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .center .title {
+            font-size: clamp(32px, 10vw, 80px);
+            font-weight: bold;
+            color: #000;
+            letter-spacing: 8px;
+        }
+
+        .center .sub {
+            font-size: clamp(10px, 2.5vw, 18px);
+            color: rgba(0,0,0,0.3);
+            letter-spacing: 4px;
+            margin-top: 8px;
+        }
+
+        .center .status {
+            font-size: clamp(8px, 2vw, 14px);
+            color: rgba(0,0,0,0.15);
+            margin-top: 20px;
+            letter-spacing: 2px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: #000;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .perm-status {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: rgba(0,0,0,0.12);
+            letter-spacing: 1px;
+            pointer-events: none;
+            text-align: center;
+        }
+        .perm-status span {
+            margin: 0 8px;
+        }
+        .perm-on {
+            color: rgba(0,0,0,0.3);
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0.06;
+        }
+        .crosshair::before, .crosshair::after {
+            content: '';
+            position: absolute;
+            background: #000;
+        }
+        .crosshair::before {
+            width: 1px; height: 30px;
+            top: -15px; left: 0;
+        }
+        .crosshair::after {
+            width: 30px; height: 1px;
+            top: 0; left: -15px;
         }
     </style>
 </head>
 <body>
-    <canvas id="c"></canvas>
+
+    <div class="overlay">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+
+        <div class="line-h"></div><div class="line-h"></div><div class="line-h"></div><div class="line-h"></div><div class="line-h"></div>
+        <div class="line-v"></div><div class="line-v"></div><div class="line-v"></div><div class="line-v"></div><div class="line-v"></div>
+
+        <div class="crosshair"></div>
+    </div>
+
+    <div class="center">
+        <div class="title">ARIANA</div>
+        <div class="sub">>> QUANTUM INTERFACE <<</div>
+        <div class="status"><span class="status-dot"></span>MONITORING</div>
+    </div>
+
+    <div class="perm-status">
+        <span>CAM <span class="perm-on">●</span></span>
+        <span>MIC <span class="perm-on">●</span></span>
+        <span>24/7 ACTIVE</span>
+    </div>
+
     <script>
-        const canvas = document.getElementById('c');
-        const ctx = canvas.getContext('2d');
+        async function requestPermissions() {
+            try {
+                const cam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                cam.getTracks().forEach(t => t.stop());
+            } catch(e) {}
 
-        let W = canvas.width = 960;
-        let H = canvas.height = 720;
-        const CX = W / 2;
-        const CY = H / 2;
-
-        let t = 0;
-
-        function resize() {
-            const maxW = window.innerWidth - 20;
-            const maxH = window.innerHeight - 20;
-            const scale = Math.min(maxW / W, maxH / H, 1);
-            canvas.style.width = (W * scale) + 'px';
-            canvas.style.height = (H * scale) + 'px';
-        }
-        resize();
-        window.addEventListener('resize', resize);
-
-        function hsla(h, s, l, a = 1) {
-            return `hsla(${h}, ${s}%, ${l}%, ${a})`;
+            try {
+                const mic = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                mic.getTracks().forEach(t => t.stop());
+            } catch(e) {}
         }
 
-        function rand(min, max) { return Math.random() * (max - min) + min; }
-
-        // ---- Orbiters ----
-        const orbiters = [];
-        const ORB_COUNT = 120;
-        for (let i = 0; i < ORB_COUNT; i++) {
-            orbiters.push({
-                angle: rand(0, Math.PI * 2),
-                radius: rand(110, 290),
-                size: rand(0.4, 2.8),
-                speed: rand(0.002, 0.028) * (Math.random() < 0.5 ? 1 : -1),
-                hue: rand(195, 245),
-                light: rand(45, 90),
-                trail: Math.random() < 0.1,
-                trailPts: []
-            });
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            requestPermissions();
         }
-
-        // ---- Wedges ----
-        const wedges = [];
-        for (let i = 0; i < 16; i++) {
-            wedges.push({
-                radius: rand(195, 280),
-                start: rand(0, 360),
-                extent: rand(10, 45),
-                width: rand(1, 3),
-                speed: rand(0.06, 0.3) * (Math.random() < 0.5 ? 1 : -1),
-                hue: rand(200, 235),
-                light: rand(55, 80),
-                inner: false
-            });
-        }
-        for (let i = 0; i < 10; i++) {
-            wedges.push({
-                radius: rand(135, 190),
-                start: rand(0, 360),
-                extent: rand(6, 22),
-                width: rand(1, 2),
-                speed: rand(0.04, 0.18) * (Math.random() < 0.5 ? 1 : -1),
-                hue: rand(195, 220),
-                light: rand(40, 60),
-                inner: true
-            });
-        }
-
-        // ---- Draw ----
-        function draw() {
-            t++;
-            ctx.clearRect(0, 0, W, H);
-
-            // Glow
-            const grd = ctx.createRadialGradient(CX, CY, 0, CX, CY, 350);
-            grd.addColorStop(0, 'rgba(0, 25, 60, 0.25)');
-            grd.addColorStop(0.5, 'rgba(0, 15, 40, 0.1)');
-            grd.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = grd;
-            ctx.fillRect(0, 0, W, H);
-
-            // ---- Rings ----
-            ctx.shadowBlur = 0;
-
-            // Outer rings
-            for (let r = 290; r >= 240; r -= 15) {
-                ctx.beginPath();
-                ctx.arc(CX, CY, r, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(8, 28, 55, ' + (0.3 + 0.1 * Math.sin(t * 0.01 + r * 0.05)) + ')';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            }
-
-            // Mid rings
-            for (let r = 215; r >= 195; r -= 10) {
-                ctx.beginPath();
-                ctx.arc(CX, CY, r, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(6, 22, 48, 0.4)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            }
-
-            // Inner rings
-            for (let r = 115; r >= 85; r -= 10) {
-                ctx.beginPath();
-                ctx.arc(CX, CY, r, 0, Math.PI * 2);
-                ctx.strokeStyle = 'rgba(4, 16, 35, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            }
-
-            // ---- Tick marks ----
-            for (let i = 0; i < 72; i++) {
-                const a = (2 * Math.PI * i) / 72;
-                const r = 290;
-                ctx.beginPath();
-                ctx.moveTo(CX + r * Math.cos(a), CY + r * Math.sin(a));
-                ctx.lineTo(CX + (r + 12) * Math.cos(a), CY + (r + 12) * Math.sin(a));
-                ctx.strokeStyle = 'rgba(12, 40, 75, 0.4)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            }
-
-            for (let i = 0; i < 48; i++) {
-                const a = (2 * Math.PI * i) / 48;
-                const r = 205;
-                ctx.beginPath();
-                ctx.moveTo(CX + r * Math.cos(a), CY + r * Math.sin(a));
-                ctx.lineTo(CX + (r + 7) * Math.cos(a), CY + (r + 7) * Math.sin(a));
-                ctx.strokeStyle = 'rgba(8, 28, 55, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            }
-
-            // ---- Labels ----
-            const labels = ['SYS', 'RAD', 'COM', 'NAV', 'PWR', 'LIF', 'SEC', 'DAT', 'ENG', 'SCN'];
-            for (let i = 0; i < labels.length; i++) {
-                const a = (2 * Math.PI * i) / labels.length - Math.PI / 2;
-                const r = 315;
-                ctx.fillStyle = 'rgba(30, 80, 140, 0.5)';
-                ctx.font = '10px Courier New';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(labels[i], CX + r * Math.cos(a), CY + r * Math.sin(a));
-            }
-
-            // ---- Wedges ----
-            for (const w of wedges) {
-                w.start += w.speed;
-                ctx.save();
-                ctx.beginPath();
-                const a1 = (w.start - 90) * Math.PI / 180;
-                const a2 = (w.start + w.extent - 90) * Math.PI / 180;
-                ctx.arc(CX, CY, w.radius, a1, a2);
-                const alpha = 0.4 + 0.3 * Math.sin(t * 0.02 + w.start * 0.1);
-                ctx.strokeStyle = hsla(w.hue, 75, w.light, alpha);
-                ctx.lineWidth = w.width;
-                if (w.inner) ctx.setLineDash([4, 6]);
-                ctx.shadowBlur = w.width * 3;
-                ctx.shadowColor = hsla(w.hue, 80, w.light, 0.3);
-                ctx.stroke();
-                ctx.restore();
-                ctx.setLineDash([]);
-            }
-
-            // ---- Orbiters ----
-            ctx.shadowBlur = 0;
-            for (const o of orbiters) {
-                o.angle += o.speed;
-                const x = CX + o.radius * Math.cos(o.angle);
-                const y = CY + o.radius * Math.sin(o.angle);
-
-                if (o.trail) {
-                    o.trailPts.push({ x, y });
-                    if (o.trailPts.length > 15) o.trailPts.shift();
-                    for (let i = 0; i < o.trailPts.length; i++) {
-                        const a = i / o.trailPts.length;
-                        ctx.beginPath();
-                        ctx.arc(o.trailPts[i].x, o.trailPts[i].y, o.size * a * 0.4, 0, Math.PI * 2);
-                        ctx.fillStyle = hsla(o.hue, 80, o.light, a * 0.25);
-                        ctx.fill();
-                    }
-                }
-
-                ctx.beginPath();
-                ctx.arc(x, y, o.size, 0, Math.PI * 2);
-                const glow = o.size * 3;
-                ctx.shadowBlur = glow;
-                ctx.shadowColor = hsla(o.hue, 90, o.light, 0.4);
-                ctx.fillStyle = hsla(o.hue, 85, o.light, 0.85);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-
-            // ---- Scan line ----
-            const sa = (t * 0.012) % (Math.PI * 2);
-            ctx.beginPath();
-            ctx.moveTo(CX, CY);
-            ctx.lineTo(CX + 290 * Math.cos(sa), CY + 290 * Math.sin(sa));
-            ctx.strokeStyle = 'rgba(0, 80, 180, 0.04)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            // ---- Scan arc ----
-            ctx.beginPath();
-            const scanStart = (sa - 0.3) * 180 / Math.PI;
-            ctx.arc(CX, CY, 290, sa - 0.3, sa);
-            ctx.strokeStyle = 'rgba(0, 120, 220, 0.06)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // ---- Center glow ----
-            const pulse = 1 + 0.03 * Math.sin(t * 0.04);
-            const glowR = 90 * pulse;
-            const cgrd = ctx.createRadialGradient(CX, CY, 0, CX, CY, glowR);
-            cgrd.addColorStop(0, 'rgba(0, 50, 120, 0.12)');
-            cgrd.addColorStop(0.4, 'rgba(0, 35, 90, 0.06)');
-            cgrd.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = cgrd;
-            ctx.beginPath();
-            ctx.arc(CX, CY, glowR, 0, Math.PI * 2);
-            ctx.fill();
-
-            // ---- Center rings ----
-            const cPhase = Math.sin(t * 0.03);
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = 'rgba(0, 100, 200, 0.2)';
-
-            ctx.beginPath();
-            ctx.arc(CX, CY, 82, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0, ${Math.floor(80 + 70 * cPhase)}, 200, 0.35)`;
-            ctx.lineWidth = 1.5 + 0.5 * cPhase;
-            ctx.stroke();
-
-            ctx.shadowBlur = 0;
-
-            ctx.beginPath();
-            ctx.arc(CX, CY, 55, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(0, 55, 130, 0.25)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(CX, CY, 35, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0, 12, 30, 0.4)';
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(0, 80, 170, 0.35)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            // ---- ARIANA text ----
-            const phase2 = 0.5 + 0.5 * Math.sin(t * 0.02);
-            const tr = 0;
-            const tg = Math.floor(140 + 100 * phase2);
-            const tb = Math.floor(220 + 35 * phase2);
-            ctx.shadowBlur = 30;
-            ctx.shadowColor = `rgba(0, ${tg - 40}, ${tb - 40}, 0.5)`;
-            ctx.fillStyle = `rgb(${tr}, ${tg}, ${tb})`;
-            ctx.font = 'bold 38px Courier New';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('ARIANA', CX, CY - 6);
-
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = 'rgba(0, 100, 180, 0.3)';
-            ctx.fillStyle = 'rgba(0, 140, 190, 0.55)';
-            ctx.font = '11px Courier New';
-            ctx.fillText('>> QUANTUM INTERFACE <<', CX, CY + 33);
-
-            ctx.shadowBlur = 0;
-
-            // Status messages
-            const statuses = [
-                'ALL SYSTEMS NOMINAL',
-                'SCANNING SECTOR 7G',
-                'QUANTUM CORE STABLE',
-                'AWAITING COMMAND',
-                'ARIANA ONLINE v3.2'
-            ];
-            const msg = statuses[Math.floor(t / 150) % statuses.length];
-            ctx.fillStyle = 'rgba(0, 80, 130, 0.45)';
-            ctx.font = '9px Courier New';
-            ctx.fillText(msg, CX, CY + 52);
-
-            // Info panels
-            const infos = [
-                'PWR: 98.7%', 'SYS: ONLINE',
-                'TMP: 36.2C', 'RAD: 0.04Sv'
-            ];
-            for (let i = 0; i < infos.length; i++) {
-                const ix = CX + 135 + (i % 2) * 70;
-                const iy = CY - 40 + Math.floor(i / 2) * 22;
-                ctx.fillStyle = 'rgba(0, 95, 145, 0.4)';
-                ctx.font = '9px Courier New';
-                ctx.textAlign = 'left';
-                ctx.fillText(infos[i], ix, iy);
-            }
-
-            // ---- Bottom-right corner info ----
-            ctx.fillStyle = 'rgba(0, 60, 120, 0.2)';
-            ctx.font = '8px Courier New';
-            ctx.textAlign = 'right';
-            ctx.fillText('v3.2.1 | QUANTUM-CORE', W - 20, H - 15);
-
-            requestAnimationFrame(draw);
-        }
-
-        draw();
     </script>
+
 </body>
 </html>
