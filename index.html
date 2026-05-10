@@ -3,57 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ARIANA OS</title>
+    <title>ARIANA</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        html,body { width:100%; height:100%; overflow:hidden; background:#fff; font-family:'Courier New',monospace; }
+        html,body { width:100%; height:100%; overflow:hidden; background:#0a0a0f; font-family:'Courier New',monospace; }
+        canvas { display:block; position:fixed; top:0; left:0; width:100%; height:100%; }
 
-        canvas { display:block; position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; }
-        .ui-layer { position:fixed; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+        .top-bar { position:fixed; top:0; left:0; right:0; height:36px; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:0 20px; pointer-events:none; }
+        .top-bar .l { font-size:10px; color:rgba(255,255,255,0.15); letter-spacing:3px; text-transform:uppercase; }
+        .top-bar .r { font-size:10px; color:rgba(255,255,255,0.12); letter-spacing:2px; }
 
-        .bar-top { position:fixed; top:0; left:0; right:0; height:32px; z-index:3; display:flex; align-items:center; justify-content:space-between; padding:0 16px; pointer-events:none; }
-        .bar-top .time { font-size:11px; color:rgba(0,0,0,0.25); letter-spacing:2px; }
-        .bar-top .info { font-size:9px; color:rgba(0,0,0,0.15); letter-spacing:1px; }
-
-        .bar-bottom { position:fixed; bottom:0; left:0; right:0; height:40px; z-index:3; display:flex; align-items:center; justify-content:center; gap:24px; pointer-events:none; }
-        .bar-bottom span { font-size:9px; color:rgba(0,0,0,0.12); letter-spacing:2px; text-transform:uppercase; }
-
-        .edge-deco { position:fixed; z-index:2; pointer-events:none; }
-        .edge-deco svg { width:100%; height:100%; }
-
-        .corner-wrap { position:fixed; z-index:3; pointer-events:none; }
-        .corner-wrap svg { overflow:visible; }
+        .bottom-bar { position:fixed; bottom:0; left:0; right:0; height:44px; z-index:10; display:flex; align-items:center; justify-content:center; gap:28px; pointer-events:none; }
+        .bottom-bar span { font-size:8px; color:rgba(255,255,255,0.1); letter-spacing:3px; text-transform:uppercase; }
+        .bottom-bar .dot { color:rgba(100,180,255,0.3); }
     </style>
 </head>
 <body>
 
-<div class="corner-wrap" style="top:12px;left:12px;width:40px;height:40px;">
-    <svg width="40" height="40"><path d="M0,40 L0,0 L40,0" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/></svg>
-</div>
-<div class="corner-wrap" style="top:12px;right:12px;width:40px;height:40px;">
-    <svg width="40" height="40"><path d="M0,0 L40,0 L40,40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/></svg>
-</div>
-<div class="corner-wrap" style="bottom:12px;left:12px;width:40px;height:40px;">
-    <svg width="40" height="40"><path d="M0,0 L0,40 L40,40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/></svg>
-</div>
-<div class="corner-wrap" style="bottom:12px;right:12px;width:40px;height:40px;">
-    <svg width="40" height="40"><path d="M40,0 L40,40 L0,40" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/></svg>
+<div class="top-bar">
+    <span class="l">ARIANA</span>
+    <span class="r" id="clock">00:00</span>
 </div>
 
-<div class="bar-top">
-    <span class="time" id="clock">00:00</span>
-    <span class="info">ARIANA · v3.2.1</span>
-</div>
-
-<div class="bar-bottom">
-    <span>sys</span>
-    <span>◆</span>
-    <span>com</span>
-    <span>◆</span>
-    <span>nav</span>
-    <span>◆</span>
-    <span>pwr</span>
-    <span>◆</span>
+<div class="bottom-bar">
+    <span>sys</span><span class="dot">◆</span>
+    <span>com</span><span class="dot">◆</span>
+    <span>nav</span><span class="dot">◆</span>
+    <span>pwr</span><span class="dot">◆</span>
     <span>sec</span>
 </div>
 
@@ -63,207 +39,234 @@
     const canvas = document.getElementById('c');
     const ctx = canvas.getContext('2d');
 
-    let W, H, CX, CY, scale;
+    let W, H, CX, CY, sc;
 
     function resize() {
         W = canvas.width = window.innerWidth;
         H = canvas.height = window.innerHeight;
         CX = W / 2;
         CY = H / 2;
-        scale = Math.min(W, H) / 800;
+        sc = Math.min(W, H) / 900;
     }
     resize();
     window.addEventListener('resize', resize);
 
     let t = 0;
 
-    function drawHexGrid() {
-        const size = 28 * scale;
-        const cols = Math.ceil(W / (size * 1.5)) + 2;
-        const rows = Math.ceil(H / (size * 1.732)) + 2;
-        ctx.strokeStyle = 'rgba(0,0,0,0.03)';
-        ctx.lineWidth = 0.5;
-        for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-                const cx = c * size * 1.5;
-                const cy = r * size * 1.732 + (c % 2) * size * 0.866;
-                ctx.beginPath();
-                for (let i = 0; i < 6; i++) {
-                    const a = Math.PI / 3 * i - Math.PI / 6;
-                    const x = cx + size * Math.cos(a);
-                    const y = cy + size * Math.sin(a);
-                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.stroke();
-            }
-        }
-    }
+    function drawBG() {
+        const grad = ctx.createRadialGradient(CX, CY, 0, CX, CY, H * 0.7);
+        grad.addColorStop(0, '#12121e');
+        grad.addColorStop(0.4, '#0a0a12');
+        grad.addColorStop(1, '#030308');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
 
-    function drawOrbitRing(r, aa, speed, hue) {
-        const count = 36;
-        for (let i = 0; i < count; i++) {
-            const a = (2 * Math.PI * i) / count + aa;
-            const x = CX + r * Math.cos(a);
-            const y = CY + r * Math.sin(a);
-            const s = 1 + Math.sin(a * 3 + t * 0.02) * 0.5;
+        for (let i = 0; i < 120; i++) {
+            const x = (i * 137.5 + t * 0.02) % W;
+            const y = (i * 97.3 + t * 0.015) % H;
             ctx.beginPath();
-            ctx.arc(x, y, s * scale * 0.6, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0,0,0,${0.06 + 0.04 * Math.sin(a + t * speed)})`;
+            ctx.arc(x, y, 0.3 + 0.3 * Math.sin(i + t * 0.01), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(100,180,255,${0.02 + 0.02 * Math.sin(i * 0.5 + t * 0.005)})`;
             ctx.fill();
         }
     }
 
-    function drawAura(r, alpha) {
-        const grad = ctx.createRadialGradient(CX, CY, r * 0.3, CX, CY, r);
-        grad.addColorStop(0, `rgba(0,0,0,${alpha * 0.04})`);
-        grad.addColorStop(1, `rgba(0,0,0,0)`);
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(CX, CY, r, 0, Math.PI * 2);
-        ctx.fill();
+    function drawGrid() {
+        ctx.strokeStyle = 'rgba(100,180,255,0.03)';
+        ctx.lineWidth = 0.5;
+        const step = 40;
+        for (let x = step; x < W; x += step) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, H);
+            ctx.stroke();
+        }
+        for (let y = step; y < H; y += step) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(W, y);
+            ctx.stroke();
+        }
     }
 
-    function drawRobotFace() {
-        const s = scale * 180;
-        const cx = CX, cy = CY;
+    function drawHumanFigure() {
+        const s = sc * 220;
+        const cx = CX, cy = CY + s * 0.15;
+        const pulse = 1 + 0.005 * Math.sin(t * 0.02);
 
-        // head outline
-        const grad = ctx.createRadialGradient(cx, cy - s * 0.1, s * 0.1, cx, cy, s);
-        grad.addColorStop(0, 'rgba(0,0,0,0.02)');
-        grad.addColorStop(0.7, 'rgba(0,0,0,0.04)');
-        grad.addColorStop(1, 'rgba(0,0,0,0.01)');
+        // outer glow
+        const glow = ctx.createRadialGradient(cx, cy - s * 0.4, 0, cx, cy - s * 0.4, s * 1.2);
+        glow.addColorStop(0, 'rgba(60,140,255,0.03)');
+        glow.addColorStop(0.5, 'rgba(40,100,220,0.02)');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(cx, cy - s * 0.2, s * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // scan line
+        const scanY = cy - s * 0.9 + (t * 0.6 % (s * 1.8));
+        const grad = ctx.createLinearGradient(0, scanY - 5, 0, scanY + 5);
+        grad.addColorStop(0, 'rgba(60,180,255,0)');
+        grad.addColorStop(0.5, `rgba(60,180,255,${0.03 + 0.02 * Math.sin(t * 0.05)})`);
+        grad.addColorStop(1, 'rgba(60,180,255,0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(cx - s * 0.5, scanY - 5, s, 10);
 
         ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(pulse, pulse);
 
-        // outer ring
+        const alpha = 0.12 + 0.03 * Math.sin(t * 0.015);
+
+        // head
         ctx.beginPath();
-        ctx.arc(cx, cy, s, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.arc(0, -s * 0.7, s * 0.18, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(100,200,255,${alpha})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // inner ring
+        // head inner glow
+        const headG = ctx.createRadialGradient(0, -s * 0.7, 0, 0, -s * 0.7, s * 0.18);
+        headG.addColorStop(0, `rgba(80,180,255,${alpha * 0.3})`);
+        headG.addColorStop(1, `rgba(80,180,255,0)`);
+        ctx.fillStyle = headG;
         ctx.beginPath();
-        ctx.arc(cx, cy, s * 0.85, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // visor / eyes
-        const ew = s * 0.6;
-        const eh = s * 0.18;
-        const ey = cy - s * 0.08;
-
-        // eye glow
-        const eyeGrad = ctx.createRadialGradient(cx, ey, 0, cx, ey, ew);
-        eyeGrad.addColorStop(0, 'rgba(0,0,0,0.12)');
-        eyeGrad.addColorStop(0.5, 'rgba(0,0,0,0.06)');
-        eyeGrad.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = eyeGrad;
-        ctx.fillRect(cx - ew, ey - eh, ew * 2, eh * 2);
-
-        // eye bar
-        const barW = ew * 1.6;
-        const barH = eh * 0.5;
-        ctx.beginPath();
-        ctx.roundRect(cx - barW / 2, ey - barH / 2, barW, barH, barH / 2);
-        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.arc(0, -s * 0.7, s * 0.18, 0, Math.PI * 2);
         ctx.fill();
 
-        // eye scan line
-        const scanX = cx - barW / 2 + (barW * (0.3 + 0.4 * Math.sin(t * 0.015)));
-        ctx.beginPath();
-        ctx.moveTo(scanX, ey - barH / 2 + 1);
-        ctx.lineTo(scanX, ey + barH / 2 - 1);
-        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // mouth / speaker grille
-        const my = cy + s * 0.25;
-        const mw = s * 0.35;
-        const slots = 5;
-        for (let i = 0; i < slots; i++) {
-            const a = (i / (slots - 1) - 0.5) * mw;
-            const x = cx + a;
-            const sl = 3 + 2 * Math.sin(t * 0.03 + i * 0.5);
-            ctx.fillStyle = 'rgba(0,0,0,0.08)';
-            ctx.fillRect(x - 1, my - sl / 2, 2, sl);
-        }
-
-        // side panels
+        // face details - eyes
+        const eyeY = -s * 0.72;
+        const eyeSpacing = s * 0.07;
         for (let side = -1; side <= 1; side += 2) {
-            const px = cx + side * s * 0.75;
-            const py = cy;
-
             ctx.beginPath();
-            ctx.arc(px, py, s * 0.12, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-
-            // inner dot
-            const ds = s * 0.03 + s * 0.015 * Math.sin(t * 0.02 + side);
-            ctx.beginPath();
-            ctx.arc(px, py, ds, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.arc(side * eyeSpacing, eyeY, s * 0.025, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(100,200,255,${alpha * 1.2})`;
             ctx.fill();
         }
 
-        // top antenna arc
+        // neck
         ctx.beginPath();
-        ctx.arc(cx, cy - s * 0.1, s * 0.5, -Math.PI * 0.8, -Math.PI * 0.2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+        ctx.moveTo(-s * 0.05, -s * 0.52);
+        ctx.lineTo(-s * 0.04, -s * 0.42);
+        ctx.lineTo(s * 0.04, -s * 0.42);
+        ctx.lineTo(s * 0.05, -s * 0.52);
+        ctx.closePath();
+        ctx.strokeStyle = `rgba(100,200,255,${alpha * 0.8})`;
         ctx.lineWidth = 1;
-        ctx.setLineDash([3, 6]);
+        ctx.stroke();
+
+        // torso
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.2, -s * 0.4);
+        ctx.quadraticCurveTo(-s * 0.25, -s * 0.1, -s * 0.18, s * 0.1);
+        ctx.lineTo(-s * 0.15, s * 0.1);
+        ctx.quadraticCurveTo(-s * 0.12, -s * 0.05, -s * 0.08, -s * 0.35);
+        ctx.lineTo(s * 0.08, -s * 0.35);
+        ctx.quadraticCurveTo(s * 0.12, -s * 0.05, s * 0.15, s * 0.1);
+        ctx.lineTo(s * 0.18, s * 0.1);
+        ctx.quadraticCurveTo(s * 0.25, -s * 0.1, s * 0.2, -s * 0.4);
+        ctx.closePath();
+        ctx.strokeStyle = `rgba(100,200,255,${alpha * 0.9})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.fillStyle = `rgba(60,160,255,${alpha * 0.08})`;
+        ctx.fill();
+
+        // chest arc (holographic)
+        ctx.beginPath();
+        ctx.arc(0, -s * 0.1, s * 0.2, -0.5, 0.5);
+        ctx.strokeStyle = `rgba(100,200,255,${alpha * 0.5})`;
+        ctx.lineWidth = 0.5;
+        ctx.setLineDash([2, 4]);
         ctx.stroke();
         ctx.setLineDash([]);
+
+        // left arm
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.2, -s * 0.35);
+        ctx.quadraticCurveTo(-s * 0.35, -s * 0.2, -s * 0.3, s * 0.05);
+        ctx.quadraticCurveTo(-s * 0.28, s * 0.15, -s * 0.25, s * 0.25);
+        ctx.strokeStyle = `rgba(100,200,255,${alpha * 0.8})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // right arm
+        ctx.beginPath();
+        ctx.moveTo(s * 0.2, -s * 0.35);
+        ctx.quadraticCurveTo(s * 0.35, -s * 0.2, s * 0.3, s * 0.05);
+        ctx.quadraticCurveTo(s * 0.28, s * 0.15, s * 0.25, s * 0.25);
+        ctx.stroke();
+
+        // left leg
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.1, s * 0.1);
+        ctx.quadraticCurveTo(-s * 0.15, s * 0.35, -s * 0.12, s * 0.6);
+        ctx.quadraticCurveTo(-s * 0.1, s * 0.7, -s * 0.08, s * 0.8);
+        ctx.stroke();
+
+        // right leg
+        ctx.beginPath();
+        ctx.moveTo(s * 0.1, s * 0.1);
+        ctx.quadraticCurveTo(s * 0.15, s * 0.35, s * 0.12, s * 0.6);
+        ctx.quadraticCurveTo(s * 0.1, s * 0.7, s * 0.08, s * 0.8);
+        ctx.stroke();
+
+        // measurement rings around body
+        for (let i = 0; i < 5; i++) {
+            const ringY = -s * 0.5 + i * s * 0.28;
+            const ringW = s * (0.25 + i * 0.06);
+            const ringAlpha = alpha * (0.3 + 0.1 * Math.sin(t * 0.01 + i * 2));
+            ctx.beginPath();
+            ctx.ellipse(0, ringY, ringW, s * 0.02, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(100,200,255,${ringAlpha})`;
+            ctx.lineWidth = 0.3;
+            ctx.stroke();
+        }
+
+        // floating data dots around body
+        for (let i = 0; i < 20; i++) {
+            const a = (2 * Math.PI * i) / 20 + t * 0.003;
+            const r = s * (0.35 + 0.1 * Math.sin(i * 1.5 + t * 0.01));
+            const dx = r * Math.cos(a);
+            const dy = -s * 0.1 + r * Math.sin(a) * 0.6;
+            ctx.beginPath();
+            ctx.arc(dx, dy, 0.8 + 0.5 * Math.sin(t * 0.02 + i), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(100,200,255,${alpha * 0.5 + 0.3 * Math.sin(t * 0.01 + i) * 0.5})`;
+            ctx.fill();
+        }
 
         ctx.restore();
     }
 
-    function drawDataNodes() {
-        const nodes = [
-            { x: CX - 300 * scale, y: CY - 150 * scale },
-            { x: CX + 300 * scale, y: CY - 120 * scale },
-            { x: CX - 280 * scale, y: CY + 180 * scale },
-            { x: CX + 290 * scale, y: CY + 160 * scale },
-        ];
-        for (const n of nodes) {
-            ctx.beginPath();
-            ctx.arc(n.x, n.y, 2 * scale, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.08)';
-            ctx.fill();
+    function drawRadarArc() {
+        const a = (t * 0.008) % (Math.PI * 2);
+        const r = Math.min(W, H) * 0.45;
 
-            // line to center
-            ctx.beginPath();
-            ctx.moveTo(n.x, n.y);
-            const midX = (n.x + CX) / 2;
-            const midY = (n.y + CY) / 2 + 20 * Math.sin(t * 0.01 + n.x);
-            ctx.quadraticCurveTo(midX, midY, CX, CY);
-            ctx.strokeStyle = 'rgba(0,0,0,0.03)';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-        }
+        ctx.beginPath();
+        ctx.arc(CX, CY, r, a - 0.15, a);
+        ctx.strokeStyle = `rgba(60,160,255,${0.02 + 0.01 * Math.sin(t * 0.02)})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(CX, CY);
+        ctx.lineTo(CX + r * Math.cos(a), CY + r * Math.sin(a));
+        ctx.strokeStyle = 'rgba(60,160,255,0.015)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
     }
 
     function animate() {
         t++;
-        ctx.clearRect(0, 0, W, H);
-
-        drawHexGrid();
-        drawAura(350 * scale, 0.15);
-        drawOrbitRing(250 * scale, t * 0.003, 0.01, 0);
-        drawOrbitRing(290 * scale, -t * 0.004, -0.015, 0);
-        drawOrbitRing(210 * scale, t * 0.005, 0.02, 0);
-        drawDataNodes();
-        drawRobotFace();
+        drawBG();
+        drawGrid();
+        drawRadarArc();
+        drawHumanFigure();
 
         requestAnimationFrame(animate);
     }
 
-    // clock
     function updateClock() {
         const d = new Date();
         const h = String(d.getHours()).padStart(2, '0');
@@ -273,7 +276,6 @@
     updateClock();
     setInterval(updateClock, 1000);
 
-    // permissions
     (async () => {
         try {
             const cam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
