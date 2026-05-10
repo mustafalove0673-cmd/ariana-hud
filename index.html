@@ -6,7 +6,7 @@
     <title>ARIANA</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        html,body { width:100%; height:100%; overflow:hidden; background:#ffffff; }
+        html,body { width:100%; height:100%; overflow:hidden; background:#fff; }
         canvas { display:block; position:fixed; top:0; left:0; width:100%; height:100%; }
     </style>
 </head>
@@ -15,425 +15,301 @@
 <script>
     const canvas = document.getElementById('c');
     const ctx = canvas.getContext('2d');
-    let W, H, CX, CY, s;
-    let particleSeed, nodeSeed, dotSeed;
+    let W, H, CX, CY;
 
     function resize() {
         W = canvas.width = window.innerWidth;
         H = canvas.height = window.innerHeight;
         CX = W / 2;
         CY = H / 2;
-        s = Math.min(W, H) / 800;
-        particleSeed = [];
-        nodeSeed = [];
-        dotSeed = [];
-        for (let i = 0; i < 120; i++) particleSeed.push({ a: Math.random() * Math.PI * 2, r: 20 + Math.random() * 350 });
-        for (let i = 0; i < 20; i++) { const a = Math.random() * Math.PI * 2; nodeSeed.push({ x: CX + (50 + Math.random() * 280) * Math.cos(a), y: CY + (50 + Math.random() * 280) * Math.sin(a) }); }
-        for (let i = 0; i < 150; i++) dotSeed.push({ a: Math.random() * Math.PI * 2, r: 20 + Math.random() * 350, s: 0.3 + Math.random() * 0.8, o: 0.03 + 0.04 * Math.random() });
+        initLines();
+        initTunnel();
+        initFlow();
     }
     resize();
     window.addEventListener('resize', resize);
 
     let t = 0;
-    const startTime = Date.now();
 
-    function drawBG() {
-        ctx.clearRect(0, 0, W, H);
+    // ---- 3D TUNNEL LINES (perspective zoom) ----
+    let tunnelLines = [];
+    function initTunnel() {
+        tunnelLines = [];
+        for (let i = 0; i < 80; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const r = 50 + Math.random() * 300;
+            tunnelLines.push({
+                angle: a,
+                radius: r,
+                speed: 0.5 + Math.random() * 1.5,
+                z: Math.random() * 1000,
+                length: 200 + Math.random() * 400,
+                width: 0.3 + Math.random() * 0.5
+            });
+        }
+    }
 
-        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-        ctx.lineWidth = 0.4;
-        for (let x = 25; x < W; x += 25) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-        for (let y = 25; y < H; y += 25) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    function drawTunnel() {
+        const fov = 400;
+        for (const l of tunnelLines) {
+            l.z -= l.speed * 3;
+            if (l.z < -l.length) l.z += 1000 + l.length;
 
+            const z1 = l.z;
+            const z2 = l.z + l.length;
+
+            const scale1 = fov / (fov + z1);
+            const scale2 = fov / (fov + z2);
+
+            const x1 = CX + l.radius * Math.cos(l.angle) * scale1;
+            const y1 = CY + l.radius * Math.sin(l.angle) * scale1;
+            const x2 = CX + l.radius * Math.cos(l.angle) * scale2;
+            const y2 = CY + l.radius * Math.sin(l.angle) * scale2;
+
+            const alpha = Math.max(0, Math.min(0.15, (1 - z1 / 1000) * 0.15));
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
+            ctx.lineWidth = l.width * (1 + scale1 * 0.5);
+            ctx.stroke();
+        }
+    }
+
+    // ---- FLOW LINES (organic moving curves) ----
+    let flowLines = [];
+    function initFlow() {
+        flowLines = [];
         for (let i = 0; i < 30; i++) {
-            const r = 15 + i * 20 + 5 * Math.sin(i * 0.7 + t * 0.003);
-            ctx.beginPath();
-            ctx.arc(CX, CY, r, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0,0,0,${0.1 * (1 - i/35)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-        }
-
-        ctx.beginPath();
-        for (let a = 0; a < Math.PI * 14; a += 0.04) {
-            const x = CX + (3 + a * 12) * Math.cos(a + t * 0.002);
-            const y = CY + (3 + a * 12) * Math.sin(a + t * 0.002);
-            a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
-        ctx.lineWidth = 0.4;
-        ctx.stroke();
-
-        for (let ring = 0; ring < 4; ring++) {
-            const n = 8 + ring * 4;
-            const br = 80 + ring * 50;
-            const pl = 25 + ring * 10;
-            for (let i = 0; i < n; i++) {
-                const a = (2 * Math.PI * i) / n + t * 0.002 * (ring % 2 ? 1 : -1);
-                const x1 = CX + br * Math.cos(a), y1 = CY + br * Math.sin(a);
-                const x2 = CX + (br + pl) * Math.cos(a), y2 = CY + (br + pl) * Math.sin(a);
-                const cp1x = CX + (br + pl * 0.5) * Math.cos(a) - pl * 0.35 * Math.sin(a);
-                const cp1y = CY + (br + pl * 0.5) * Math.sin(a) + pl * 0.35 * Math.cos(a);
-                const cp2x = CX + (br + pl * 0.5) * Math.cos(a) + pl * 0.35 * Math.sin(a);
-                const cp2y = CY + (br + pl * 0.5) * Math.sin(a) - pl * 0.35 * Math.cos(a);
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.quadraticCurveTo(cp1x, cp1y, x2, y2);
-                ctx.quadraticCurveTo(cp2x, cp2y, x1, y1);
-                ctx.strokeStyle = `rgba(0,0,0,${0.04 + 0.02 * (1 - ring/4)})`;
-                ctx.lineWidth = 0.4;
-                ctx.stroke();
+            const pts = [];
+            const startX = Math.random() * W;
+            const startY = Math.random() * H;
+            for (let j = 0; j < 40; j++) {
+                pts.push({
+                    x: startX + (Math.random() - 0.5) * 200,
+                    y: startY + (Math.random() - 0.5) * 200
+                });
             }
-        }
-
-        for (let i = 0; i < 48; i++) {
-            const a = (2 * Math.PI * i) / 48 + t * 0.001;
-            const r1 = 190 + 30 * Math.sin(i * 2.3 + t * 0.005);
-            const r2 = r1 + 25 + 15 * Math.sin(i * 1.7 + t * 0.008);
-            ctx.beginPath();
-            ctx.moveTo(CX + r1 * Math.cos(a), CY + r1 * Math.sin(a));
-            ctx.lineTo(CX + r2 * Math.cos(a), CY + r2 * Math.sin(a));
-            ctx.strokeStyle = `rgba(0,0,0,${0.03 + 0.02 * Math.sin(i + t * 0.003)})`;
-            ctx.lineWidth = 0.3;
-            ctx.stroke();
-        }
-
-        for (let i = 0; i < 5; i++) {
-            const p = i * 0.7 + t * 0.005;
-            const r = (20 + i * 45) * (1 + 0.2 * Math.sin(p));
-            ctx.beginPath();
-            ctx.arc(CX, CY, r, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0,0,0,${0.02 + 0.01 * (1 - Math.abs(Math.sin(p)))})`;
-            ctx.lineWidth = 0.3;
-            ctx.stroke();
-        }
-
-        for (let d = 0; d < 4; d++) {
-            const len = 100 + 20 * Math.sin(d + t * 0.003);
-            const ang = (Math.PI / 2) * d + 0.15 * Math.sin(t * 0.002 + d);
-            drawTree(CX, CY, len, ang, 0);
-        }
-
-        for (const p of particleSeed) {
-            ctx.beginPath();
-            ctx.arc(CX + p.r * Math.cos(p.a), CY + p.r * Math.sin(p.a), p.s || 0.5, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0,0,0,${p.o || 0.03})`;
-            ctx.fill();
-        }
-
-        for (let i = 0; i < nodeSeed.length; i++) {
-            for (let j = i + 1; j < nodeSeed.length; j++) {
-                const dx = nodeSeed[i].x - nodeSeed[j].x;
-                const dy = nodeSeed[i].y - nodeSeed[j].y;
-                const d = Math.sqrt(dx * dx + dy * dy);
-                if (d < 100) {
-                    ctx.beginPath();
-                    ctx.moveTo(nodeSeed[i].x, nodeSeed[i].y);
-                    ctx.lineTo(nodeSeed[j].x, nodeSeed[j].y);
-                    ctx.strokeStyle = `rgba(0,0,0,${0.02 * (1 - d/100)})`;
-                    ctx.lineWidth = 0.3;
-                    ctx.stroke();
-                }
-            }
-            ctx.beginPath();
-            ctx.arc(nodeSeed[i].x, nodeSeed[i].y, 1, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.04)';
-            ctx.fill();
-        }
-
-        const chars = '+-*/=<>&%#$@!~[]{}()|;:,._';
-        for (let ring = 0; ring < 5; ring++) {
-            const r = 100 + ring * 38 + 6 * Math.sin(ring + t * 0.003);
-            const n = 18 + ring * 6;
-            for (let i = 0; i < n; i++) {
-                const a = (2 * Math.PI * i) / n + t * 0.001 * (ring % 2 ? 1 : -1);
-                ctx.fillStyle = `rgba(0,0,0,${0.02 + 0.015 * Math.sin(i + ring + t * 0.004)})`;
-                ctx.font = `${5 + ring * 0.5}px Courier New`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(chars[(i + ring * 3) % chars.length], CX + r * Math.cos(a), CY + r * Math.sin(a));
-            }
+            flowLines.push({
+                points: pts,
+                speed: 0.2 + Math.random() * 0.5,
+                offset: Math.random() * 1000,
+                width: 0.3 + Math.random() * 0.6
+            });
         }
     }
 
-    function drawTree(x, y, len, ang, dep) {
-        if (dep > 4 || len < 2) return;
-        const ex = x + len * Math.cos(ang);
-        const ey = y + len * Math.sin(ang);
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(ex, ey);
-        ctx.strokeStyle = `rgba(0,0,0,${0.04 * (1 - dep/5)})`;
-        ctx.lineWidth = 0.4 * (1 - dep/5);
-        ctx.stroke();
-        const sw = 0.35 + 0.1 * Math.sin(dep + t * 0.004);
-        drawTree(ex, ey, len * 0.68, ang - sw, dep + 1);
-        drawTree(ex, ey, len * 0.68, ang + sw, dep + 1);
-    }
-
-    function drawHat(cx, cy, sc) {
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.beginPath();
-        ctx.ellipse(0, -sc * 48, sc * 68, sc * 10, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,0,0,0.06)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(-sc * 34, -sc * 48);
-        ctx.quadraticCurveTo(-sc * 38, -sc * 92, -sc * 20, -sc * 108);
-        ctx.quadraticCurveTo(0, -sc * 116, sc * 20, -sc * 108);
-        ctx.quadraticCurveTo(sc * 38, -sc * 92, sc * 34, -sc * 48);
-        ctx.closePath();
-        const hG = ctx.createLinearGradient(0, -sc*48, 0, -sc*116);
-        hG.addColorStop(0, 'rgba(0,0,0,0.04)');
-        hG.addColorStop(0.5, 'rgba(0,0,0,0.09)');
-        hG.addColorStop(1, 'rgba(0,0,0,0.04)');
-        ctx.fillStyle = hG;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(-sc * 35, -sc * 48);
-        ctx.quadraticCurveTo(0, -sc * 54, sc * 35, -sc * 48);
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(0,0,0,0.08)';
-        ctx.fillRect(-sc * 5, -sc * 54, sc * 10, sc * 7);
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(-sc * 5, -sc * 54, sc * 10, sc * 7);
-        ctx.beginPath();
-        ctx.arc(0, -sc * 50.5, sc * 1.8, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(-sc * 10, -sc * 108);
-        ctx.quadraticCurveTo(0, -sc * 104, sc * 10, -sc * 108);
-        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-        ctx.lineWidth = 0.4;
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    function drawGlasses(cx, cy, sc) {
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = 1.8;
-        for (let side = -1; side <= 1; side += 2) {
+    function drawFlow() {
+        for (const fl of flowLines) {
             ctx.beginPath();
-            ctx.ellipse(side * sc * 22, -sc * 14, sc * 22, sc * 16, side * 0.15, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.fillStyle = 'rgba(0,0,0,0.03)';
-            ctx.fill();
-        }
-
-        for (let side = -1; side <= 1; side += 2) {
-            ctx.beginPath();
-            ctx.moveTo(side * sc * 10, -sc * 22);
-            ctx.quadraticCurveTo(side * sc * 22, -sc * 16, side * sc * 32, -sc * 6);
-            ctx.strokeStyle = 'rgba(0,0,0,0.05)';
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-        }
-
-        ctx.beginPath();
-        ctx.moveTo(-sc * 5, -sc * 12);
-        ctx.quadraticCurveTo(0, -sc * 8, sc * 5, -sc * 12);
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-        ctx.lineWidth = 1.3;
-        ctx.stroke();
-
-        for (let side = -1; side <= 1; side += 2) {
-            ctx.beginPath();
-            ctx.moveTo(side * sc * 40, -sc * 18);
-            ctx.quadraticCurveTo(side * sc * 52, -sc * 20, side * sc * 58, -sc * 26);
-            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
-        }
-        ctx.restore();
-    }
-
-    function drawHead() {
-        const cx = CX, cy = CY;
-        const sc = s * 0.95;
-        const elapsed = (Date.now() - startTime) / 1000;
-        const emerge = Math.min(1, elapsed / 3);
-        const ee = 1 - Math.pow(1 - emerge, 3);
-        const ha = Math.min(1, Math.max(0.1, (emerge - 0.2) / 0.8));
-
-        if (emerge < 1) {
-            for (let i = 0; i < 120; i++) {
-                const f = i / 120;
-                const lt = Math.max(0, Math.min(1, (elapsed - f * 2.5) / 0.6));
-                if (lt <= 0) continue;
-                const a = f * Math.PI * 2 + Math.sin(i * 3.7) * 0.5;
-                const tr = sc * (30 + 50 * Math.sin(i * 1.7));
-                const tx = cx + tr * Math.cos(a), ty = cy - sc * 20 + tr * Math.sin(a) * 0.6;
-                const sr = sc * (180 + 120 * Math.random()), sa = a + 1.2 + 0.5 * Math.random();
-                const sx = cx + sr * Math.cos(sa), sy = cy + sr * Math.sin(sa);
-                const ease = 1 - Math.pow(1 - lt, 3);
-                const px = sx + (tx - sx) * ease, py = sy + (ty - sy) * ease;
-                const sz = 1.5 * (1 - f * 0.6) * (1 - 0.5 * Math.abs(lt - 0.5) * 2);
-                ctx.beginPath();
-                ctx.arc(px, py, sz * sc * 0.05, 0, Math.PI * 2);
-                const al = lt < 0.1 ? lt * 10 : (lt > 0.9 ? (1 - lt) * 10 : 1);
-                ctx.fillStyle = `rgba(0,0,0,${al * 0.4})`;
-                ctx.fill();
+            const pts = fl.points;
+            for (let i = 0; i < pts.length; i++) {
+                const p = pts[i];
+                const dx = Math.sin(i * 0.2 + t * fl.speed * 0.01 + fl.offset) * 30;
+                const dy = Math.cos(i * 0.15 + t * fl.speed * 0.008 + fl.offset * 1.3) * 30;
+                const x = p.x + dx;
+                const y = p.y + dy;
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
             }
+            ctx.strokeStyle = `rgba(0,0,0,${0.015 + 0.01 * Math.sin(t * 0.005 + fl.offset)})`;
+            ctx.lineWidth = fl.width;
+            ctx.stroke();
         }
+    }
 
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.scale(0.6 + 0.4 * ee, 0.6 + 0.4 * ee);
-        drawHat(0, 0, sc);
-
-        const pts = [];
-        const np = 28;
-        for (let i = 0; i < np; i++) {
-            const a = (2 * Math.PI * i) / np - Math.PI / 2;
-            let r;
-            if (i < 5) r = sc * (48 + 18 * Math.sin(i * 1.5));
-            else if (i < 10) r = sc * (50 + 12 * Math.sin(i * 0.9));
-            else if (i < 18) r = sc * (52 + 22 * Math.sin(i * 0.5));
-            else if (i < 24) r = sc * (48 + 16 * Math.sin(i * 1.1));
-            else r = sc * (42 + 20 * Math.sin(i * 1.3));
-            pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
+    // ---- 3D GRID (perspective zoom) ----
+    let gridLines3D = [];
+    function initLines() {
+        gridLines3D = [];
+        for (let i = 0; i < 40; i++) {
+            gridLines3D.push({
+                x: (Math.random() - 0.5) * W * 2,
+                z: Math.random() * 1500,
+                speed: 0.5 + Math.random() * 2
+            });
         }
+    }
 
-        ctx.strokeStyle = `rgba(0,0,0,${0.25 * ha})`;
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        for (let i = 0; i <= np; i++) {
-            const p = pts[i % np], pn = pts[(i + 1) % np];
-            i === 0 ? ctx.moveTo(p.x, p.y) : ctx.quadraticCurveTo(p.x, p.y, (p.x + pn.x) / 2, (p.y + pn.y) / 2);
-        }
-        ctx.stroke();
+    function draw3DGrid() {
+        const fov = 500;
+        const camZ = t * 2;
 
-        for (let i = 0; i < 8; i++) {
-            const a = (2 * Math.PI * i) / 8;
+        // horizontal lines
+        for (let y = -5; y <= 5; y++) {
             ctx.beginPath();
-            ctx.moveTo(sc * 10 * Math.cos(a), sc * 10 * Math.sin(a));
-            ctx.lineTo(sc * 50 * Math.cos(a), sc * 50 * Math.sin(a));
-            ctx.strokeStyle = `rgba(0,0,0,${0.04 * ha})`;
+            let started = false;
+            for (let x = -30; x <= 30; x++) {
+                const wx = x * 30;
+                const wy = y * 30;
+                const wz = -500 + (camZ % 1000);
+
+                const scale = fov / (fov + wz);
+                const sx = CX + wx * scale;
+                const sy = CY + wy * scale;
+
+                if (scale > 0 && sx > -100 && sx < W + 100 && sy > -100 && sy < H + 100) {
+                    if (!started) { ctx.moveTo(sx, sy); started = true; }
+                    else ctx.lineTo(sx, sy);
+                } else started = false;
+            }
+            const alpha = Math.max(0, Math.min(0.04, 0.04 * (1 - Math.abs(y) / 6)));
+            ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
 
-        for (let i = 0; i < 4; i++) {
+        // vertical lines
+        for (let x = -30; x <= 30; x++) {
             ctx.beginPath();
-            ctx.arc(0, sc * 3, sc * (22 + i * 10), 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0,0,0,${0.03 * ha})`;
+            let started = false;
+            for (let y = -5; y <= 5; y++) {
+                const wx = x * 30;
+                const wy = y * 30;
+                const wz = -500 + (camZ % 1000);
+
+                const scale = fov / (fov + wz);
+                const sx = CX + wx * scale;
+                const sy = CY + wy * scale;
+
+                if (scale > 0 && sx > -100 && sx < W + 100 && sy > -100 && sy < H + 100) {
+                    if (!started) { ctx.moveTo(sx, sy); started = true; }
+                    else ctx.lineTo(sx, sy);
+                } else started = false;
+            }
+            const alpha = Math.max(0, Math.min(0.04, 0.04 * (1 - Math.abs(x) / 32)));
+            ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
 
-        drawGlasses(0, 0, sc);
-
-        for (let side = -1; side <= 1; side += 2) {
-            const eg = ctx.createRadialGradient(side*sc*22, -sc*14, 0, side*sc*22, -sc*14, sc*14);
-            eg.addColorStop(0, `rgba(0,0,0,${0.1 + 0.06 * Math.sin(t*0.015)})`);
-            eg.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = eg;
+        // diagonal perspective lines to vanishing point
+        for (let i = -12; i <= 12; i += 2) {
+            const angle = (i / 12) * Math.PI * 0.45;
             ctx.beginPath();
-            ctx.arc(side*sc*22, -sc*14, sc*14, 0, Math.PI*2);
+            const len = 800;
+            const sx = CX + len * Math.sin(angle);
+            const sy = CY - len * Math.cos(angle);
+            const ex = CX;
+            const ey = CY;
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+            ctx.strokeStyle = `rgba(0,0,0,${0.01 + 0.01 * (1 - Math.abs(i) / 12)})`;
+            ctx.lineWidth = 0.2;
+            ctx.stroke();
+        }
+    }
+
+    // ---- PARTICLE SYSTEM (orbiting, scale pulsing) ----
+    let particles3D = [];
+    function initParticles3D() {
+        particles3D = [];
+        for (let i = 0; i < 60; i++) {
+            particles3D.push({
+                angle: Math.random() * Math.PI * 2,
+                radius: 50 + Math.random() * 300,
+                z: Math.random() * 800 - 400,
+                speed: 0.002 + Math.random() * 0.005,
+                size: 0.5 + Math.random() * 1.5,
+                phase: Math.random() * Math.PI * 2
+            });
+        }
+    }
+    initParticles3D();
+
+    function drawParticles3D() {
+        const fov = 500;
+        for (const p of particles3D) {
+            p.angle += p.speed;
+            const x = p.radius * Math.cos(p.angle);
+            const y = p.radius * Math.sin(p.angle) * 0.5;
+            const z = p.z + 200 * Math.sin(t * 0.005 + p.phase);
+
+            const scale = fov / (fov + z);
+            if (scale <= 0) continue;
+
+            const sx = CX + x * scale;
+            const sy = CY + y * scale;
+            const sz = p.size * scale * 0.8;
+            const alpha = Math.max(0, Math.min(0.08, (1 - Math.abs(z) / 600) * 0.08));
+
+            ctx.beginPath();
+            ctx.arc(sx, sy, sz, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0,0,0,${alpha})`;
             ctx.fill();
         }
+    }
 
-        const ma = 0.12 + 0.05 * Math.sin(t * 0.02);
-        ctx.strokeStyle = `rgba(0,0,0,${ma})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(0, sc * 26, sc * 18, 0.1, Math.PI - 0.1);
-        ctx.stroke();
-        for (let i = -3; i <= 3; i++) {
-            const ax = i * sc * 6, ay = sc * 26 + sc * 1.5 * (1 - Math.abs(i) * 0.15);
+    // ---- MORPHING RINGS (scale effect) ----
+    function drawMorphRings() {
+        for (let i = 0; i < 12; i++) {
+            const phase = i * 0.3 + t * 0.004;
+            const r = 40 * (1 + 0.3 * Math.sin(phase)) + i * 30;
+            const squeeze = 1 + 0.2 * Math.sin(phase * 0.7);
+            const alpha = 0.008 + 0.006 * (1 - i / 12) * (0.5 + 0.5 * Math.sin(phase));
+
             ctx.beginPath();
-            ctx.moveTo(ax - sc * 3, ay);
-            ctx.lineTo(ax + sc * 3, ay);
-            ctx.strokeStyle = `rgba(0,0,0,${ma * 0.5})`;
+            ctx.ellipse(CX, CY, r, r * squeeze * 0.25, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
+            ctx.lineWidth = 0.4 + 0.2 * (1 - i / 12);
+            ctx.stroke();
+        }
+    }
+
+    // ---- WAVE GRID (undulating surface) ----
+    function drawWaveGrid() {
+        const cols = 20;
+        const rows = 15;
+        const cellW = W / cols;
+        const cellH = H / rows;
+
+        for (let r = 0; r <= rows; r++) {
+            ctx.beginPath();
+            for (let c = 0; c <= cols; c++) {
+                const x = c * cellW;
+                const y = r * cellH + Math.sin(c * 0.5 + t * 0.008) * 8 + Math.sin(r * 0.3 + t * 0.006) * 8;
+                c === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = `rgba(0,0,0,${0.012 + 0.008 * Math.sin(r + t * 0.004)})`;
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
 
-        ctx.strokeStyle = `rgba(0,0,0,${0.08 * ha})`;
-        ctx.lineWidth = 0.6;
-        ctx.beginPath();
-        ctx.moveTo(-sc * 35, sc * 16);
-        ctx.quadraticCurveTo(-sc * 42, sc * 33, -sc * 30, sc * 43);
-        ctx.quadraticCurveTo(0, sc * 52, sc * 30, sc * 43);
-        ctx.quadraticCurveTo(sc * 42, sc * 33, sc * 35, sc * 16);
-        ctx.stroke();
-
-        ctx.strokeStyle = `rgba(0,0,0,${0.1 * ha})`;
-        ctx.lineWidth = 1.2;
-        for (let side = -1; side <= 1; side += 2) {
+        for (let c = 0; c <= cols; c++) {
             ctx.beginPath();
-            ctx.moveTo(side * sc * 8, -sc * 32);
-            ctx.quadraticCurveTo(side * sc * 24, -sc * 36, side * sc * 36, -sc * 30);
-            ctx.stroke();
-        }
-
-        for (let side = -1; side <= 1; side += 2) {
-            ctx.beginPath();
-            ctx.moveTo(side * sc * 24, sc * 4);
-            ctx.quadraticCurveTo(side * sc * 40, sc * 6, side * sc * 46, sc * 18);
-            ctx.strokeStyle = `rgba(0,0,0,${0.04 * ha})`;
+            for (let r = 0; r <= rows; r++) {
+                const x = c * cellW + Math.sin(r * 0.5 + t * 0.007) * 8 + Math.sin(c * 0.3 + t * 0.005) * 8;
+                const y = r * cellH;
+                r === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = `rgba(0,0,0,${0.012 + 0.008 * Math.sin(c + t * 0.004)})`;
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
-
-        ctx.strokeStyle = `rgba(0,0,0,${0.15 * ha})`;
-        ctx.lineWidth = 1.2;
-        for (let side = -1; side <= 1; side += 2) {
-            const s = side > 0 ? 1 : 0;
-            ctx.beginPath();
-            ctx.arc(side * sc * 54, -sc * 10, sc * 12, -0.4 + Math.PI * 0.5 * s, 0.4 + Math.PI * (0.5 + 0.5 * s));
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(side * sc * 54, -sc * 10, sc * 5, -0.3 + Math.PI * 0.5 * s, 0.3 + Math.PI * (0.5 + 0.5 * s));
-            ctx.strokeStyle = `rgba(0,0,0,${0.06 * ha})`;
-            ctx.lineWidth = 0.4;
-            ctx.stroke();
-        }
-
-        ctx.strokeStyle = `rgba(0,0,0,${0.08 * ha})`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(-sc * 15, sc * 50);
-        ctx.lineTo(-sc * 18, sc * 78);
-        ctx.lineTo(sc * 18, sc * 78);
-        ctx.lineTo(sc * 15, sc * 50);
-        ctx.stroke();
-
-        for (let i = 0; i < 4; i++) {
-            ctx.beginPath();
-            ctx.ellipse(0, sc * (55 + i * 6), sc * (16 - i * 3), sc * 1.5, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0,0,0,${0.04 * ha})`;
-            ctx.lineWidth = 0.3;
-            ctx.stroke();
-        }
-        ctx.restore();
     }
 
     function animate() {
-        try {
-            t++;
-            drawBG();
-            drawHead();
-        } catch(e) {
-            console.error(e);
-        }
+        t++;
+        ctx.clearRect(0, 0, W, H);
+
+        // Layer 1: Wave Grid (farthest back)
+        drawWaveGrid();
+
+        // Layer 2: Flow Lines
+        drawFlow();
+
+        // Layer 3: 3D Grid
+        draw3DGrid();
+
+        // Layer 4: Morphing Rings
+        drawMorphRings();
+
+        // Layer 5: 3D Tunnel
+        drawTunnel();
+
+        // Layer 6: 3D Particles
+        drawParticles3D();
+
         requestAnimationFrame(animate);
     }
 
