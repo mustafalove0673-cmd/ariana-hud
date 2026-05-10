@@ -33,182 +33,157 @@
     function drawBG() {
         ctx.clearRect(0,0,W,H);
 
-        // ---- KATMAN 1: Ana ızgara ----
-        ctx.strokeStyle = 'rgba(0,0,0,0.02)';
-        ctx.lineWidth = 0.3;
-        const step = 20;
-        for (let x = step; x < W; x += step) {
+        // grid
+        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+        ctx.lineWidth = 0.5;
+        for (let x = 25; x < W; x += 25) {
             ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
         }
-        for (let y = step; y < H; y += step) {
+        for (let y = 25; y < H; y += 25) {
             ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
         }
 
-        // ---- KATMAN 2: Eşmerkezli dalgalar ----
-        for (let i = 0; i < 40; i++) {
-            const r = 20 + i * 18 + 8 * Math.sin(i * 0.7 + t * 0.002);
-            const alpha = 0.004 + 0.003 * (1 - i/40) * (0.5 + 0.5 * Math.sin(i * 1.1 + t * 0.003));
+        // daire halkaları
+        for (let i = 0; i < 30; i++) {
+            const r = 15 + i * 20 + 5 * Math.sin(i * 0.7 + t * 0.003);
+            const a = i < 10 ? 0.12 : (i < 20 ? 0.08 : 0.04);
             ctx.beginPath();
             ctx.arc(CX, CY, r, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
-            ctx.lineWidth = 0.3 + 0.2 * Math.sin(i * 0.5 + t * 0.002);
+            ctx.strokeStyle = `rgba(0,0,0,${a * (1 - i/40)})`;
+            ctx.lineWidth = 0.4 + 0.2 * Math.sin(i * 0.5);
             ctx.stroke();
         }
 
-        // ---- KATMAN 3: Spiral ----
+        // spiral
         ctx.beginPath();
-        for (let a = 0; a < Math.PI * 20; a += 0.05) {
-            const r = 5 + a * 12;
+        for (let a = 0; a < Math.PI * 16; a += 0.03) {
+            const r = 3 + a * 14;
             const x = CX + r * Math.cos(a + t * 0.002);
             const y = CY + r * Math.sin(a + t * 0.002);
             a === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
         }
-        ctx.strokeStyle = 'rgba(0,0,0,0.015)';
-        ctx.lineWidth = 0.3;
+        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+        ctx.lineWidth = 0.5;
         ctx.stroke();
 
-        // ---- KATMAN 4: Mandala yaprakları ----
+        // mandala yaprakları
         for (let ring = 0; ring < 5; ring++) {
-            const petalCount = 6 + ring * 4;
-            const baseR = 80 + ring * 55;
-            const petalLen = 30 + ring * 12 + 8 * Math.sin(t * 0.003 + ring);
-            for (let i = 0; i < petalCount; i++) {
-                const a = (2 * Math.PI * i) / petalCount + t * 0.001 * (ring % 2 === 0 ? 1 : -1);
-                const alpha = 0.005 + 0.004 * (1 - ring / 5);
-                const x1 = CX + baseR * Math.cos(a);
-                const y1 = CY + baseR * Math.sin(a);
-                const tipR = baseR + petalLen;
-                const x2 = CX + tipR * Math.cos(a);
-                const y2 = CY + tipR * Math.sin(a);
-                const sw = 0.3 + 0.2 * Math.sin(i + ring + t * 0.002);
-
-                // taç yaprağı (iki eğri)
+            const n = 6 + ring * 4;
+            const br = 70 + ring * 55;
+            const pl = 25 + ring * 12;
+            const dir = ring % 2 ? 1 : -1;
+            for (let i = 0; i < n; i++) {
+                const a = (2 * Math.PI * i) / n + t * 0.002 * dir;
+                const x1 = CX + br * Math.cos(a);
+                const y1 = CY + br * Math.sin(a);
+                const x2 = CX + (br + pl) * Math.cos(a);
+                const y2 = CY + (br + pl) * Math.sin(a);
+                const cpx = CX + (br + pl*0.5) * Math.cos(a) - pl*0.35 * Math.sin(a);
+                const cpy = CY + (br + pl*0.5) * Math.sin(a) + pl*0.35 * Math.cos(a);
+                const cpx2 = CX + (br + pl*0.5) * Math.cos(a) + pl*0.35 * Math.sin(a);
+                const cpy2 = CY + (br + pl*0.5) * Math.sin(a) - pl*0.35 * Math.cos(a);
                 ctx.beginPath();
-                const cpR = baseR + petalLen * 0.4;
-                const cpW = petalLen * 0.3;
-                ctx.moveTo(x1, y1);
-                ctx.quadraticCurveTo(
-                    CX + (baseR + petalLen * 0.5) * Math.cos(a) - cpW * Math.sin(a),
-                    CY + (baseR + petalLen * 0.5) * Math.sin(a) + cpW * Math.cos(a),
-                    x2, y2
-                );
-                ctx.quadraticCurveTo(
-                    CX + (baseR + petalLen * 0.5) * Math.cos(a) + cpW * Math.sin(a),
-                    CY + (baseR + petalLen * 0.5) * Math.sin(a) - cpW * Math.cos(a),
-                    x1, y1
-                );
-                ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
-                ctx.lineWidth = sw;
+                ctx.moveTo(x1,y1);
+                ctx.quadraticCurveTo(cpx, cpy, x2, y2);
+                ctx.quadraticCurveTo(cpx2, cpy2, x1, y1);
+                ctx.strokeStyle = `rgba(0,0,0,${0.04 + 0.03 * (1 - ring/5)})`;
+                ctx.lineWidth = 0.5;
                 ctx.stroke();
             }
         }
 
-        // ---- KATMAN 5: Işın çizgileri (merkezden dışarı) ----
-        for (let i = 0; i < 72; i++) {
-            const a = (2 * Math.PI * i) / 72 + t * 0.0005;
-            const r1 = 200 + 40 * Math.sin(i * 2.3 + t * 0.004);
-            const r2 = r1 + 30 + 20 * Math.sin(i * 1.7 + t * 0.006);
-            const alpha = 0.006 + 0.004 * Math.sin(i * 1.3 + t * 0.003);
+        // ışınlar
+        for (let i = 0; i < 48; i++) {
+            const a = (2 * Math.PI * i) / 48 + t * 0.001;
+            const r1 = 180 + 30 * Math.sin(i * 2.3 + t * 0.005);
+            const r2 = r1 + 25 + 15 * Math.sin(i * 1.7 + t * 0.008);
             ctx.beginPath();
             ctx.moveTo(CX + r1 * Math.cos(a), CY + r1 * Math.sin(a));
             ctx.lineTo(CX + r2 * Math.cos(a), CY + r2 * Math.sin(a));
-            ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
-            ctx.lineWidth = 0.2 + 0.15 * Math.sin(i + t * 0.002);
+            ctx.strokeStyle = `rgba(0,0,0,${0.03 + 0.02 * Math.sin(i + t * 0.003)})`;
+            ctx.lineWidth = 0.3 + 0.2 * Math.sin(i * 0.5);
             ctx.stroke();
         }
 
-        // ---- KATMAN 6: Fractal ağaç ----
-        function drawBranch(x, y, len, angle, depth, alpha) {
-            if (depth > 4 || len < 3) return;
+        // fractal ağaç dalları
+        function drawBranch(x, y, len, angle, depth) {
+            if (depth > 4 || len < 2) return;
             const ex = x + len * Math.cos(angle);
             const ey = y + len * Math.sin(angle);
             ctx.beginPath();
             ctx.moveTo(x, y);
             ctx.lineTo(ex, ey);
-            ctx.strokeStyle = `rgba(0,0,0,${alpha * 0.3})`;
-            ctx.lineWidth = 0.2 * (1 - depth / 5);
+            ctx.strokeStyle = `rgba(0,0,0,${0.05 * (1 - depth/5)})`;
+            ctx.lineWidth = 0.4 * (1 - depth/5);
             ctx.stroke();
-            const swing = 0.3 + 0.1 * Math.sin(depth + t * 0.003);
-            drawBranch(ex, ey, len * 0.7, angle - swing, depth + 1, alpha * 0.8);
-            drawBranch(ex, ey, len * 0.7, angle + swing, depth + 1, alpha * 0.8);
+            const sw = 0.35 + 0.1 * Math.sin(depth + t * 0.004);
+            drawBranch(ex, ey, len * 0.68, angle - sw, depth + 1);
+            drawBranch(ex, ey, len * 0.68, angle + sw, depth + 1);
         }
-        // 4 yönlü fractal
         for (let d = 0; d < 4; d++) {
-            const ang = (Math.PI / 2) * d + 0.2 * Math.sin(t * 0.002 + d);
-            drawBranch(CX, CY, 120 + 30 * Math.sin(d + t * 0.003), ang, 0, 0.015);
+            drawBranch(CX, CY, 100 + 20 * Math.sin(d + t * 0.003), (Math.PI/2)*d + 0.15 * Math.sin(t*0.002+d), 0);
         }
 
-        // ---- KATMAN 7: Doku noktaları (stippling) ----
-        for (let i = 0; i < 200; i++) {
+        // nokta bulutu
+        for (let i = 0; i < 150; i++) {
             const a = Math.random() * Math.PI * 2;
-            const r = 30 + Math.random() * 350;
-            const x = CX + r * Math.cos(a);
-            const y = CY + r * Math.sin(a);
-            const sz = 0.3 + 1.5 * Math.random();
+            const r = 20 + Math.random() * 350;
             ctx.beginPath();
-            ctx.arc(x, y, sz * 0.3, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0,0,0,${0.005 + 0.008 * Math.random()})`;
+            ctx.arc(CX + r * Math.cos(a), CY + r * Math.sin(a), 0.5 + Math.random() * 0.8, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0,0,0,${0.03 + 0.04 * Math.random()})`;
             ctx.fill();
         }
 
-        // ---- KATMAN 8: Bağlantı ağı (moleküler) ----
+        // bağlantı ağı
         const nodes = [];
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 20; i++) {
             const a = Math.random() * Math.PI * 2;
-            const r = 60 + Math.random() * 300;
-            nodes.push({
-                x: CX + r * Math.cos(a),
-                y: CY + r * Math.sin(a),
-                vx: (Math.random() - 0.5) * 0.2,
-                vy: (Math.random() - 0.5) * 0.2
-            });
+            const r = 50 + Math.random() * 280;
+            nodes.push({ x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) });
         }
         for (let i = 0; i < nodes.length; i++) {
-            for (let j = i + 1; j < nodes.length; j++) {
+            for (let j = i+1; j < nodes.length; j++) {
                 const dx = nodes[i].x - nodes[j].x;
                 const dy = nodes[i].y - nodes[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist < 120) {
+                const d = Math.sqrt(dx*dx + dy*dy);
+                if (d < 100) {
                     ctx.beginPath();
                     ctx.moveTo(nodes[i].x, nodes[i].y);
                     ctx.lineTo(nodes[j].x, nodes[j].y);
-                    ctx.strokeStyle = `rgba(0,0,0,${0.003 * (1 - dist / 120)})`;
-                    ctx.lineWidth = 0.2;
+                    ctx.strokeStyle = `rgba(0,0,0,${0.015 * (1 - d/100)})`;
+                    ctx.lineWidth = 0.3;
                     ctx.stroke();
                 }
             }
             ctx.beginPath();
-            ctx.arc(nodes[i].x, nodes[i].y, 0.8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.01)';
+            ctx.arc(nodes[i].x, nodes[i].y, 1.2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.04)';
             ctx.fill();
         }
 
-        // ---- KATMAN 9: Dairesel text dizisi (görsel pattern) ----
+        // sembol halkaları
         const chars = '+-*/=<>&%#$@!~[]{}()|;:,._';
         for (let ring = 0; ring < 6; ring++) {
-            const r = 100 + ring * 40 + 10 * Math.sin(ring + t * 0.002);
-            const cnt = 20 + ring * 8;
-            for (let i = 0; i < cnt; i++) {
-                const a = (2 * Math.PI * i) / cnt + t * 0.0005 * (ring % 2 ? 1 : -1);
-                const x = CX + r * Math.cos(a);
-                const y = CY + r * Math.sin(a);
-                ctx.fillStyle = `rgba(0,0,0,${0.004 + 0.003 * Math.sin(i + ring + t * 0.003)})`;
-                ctx.font = `${5 + ring}px Courier New`;
+            const r = 90 + ring * 40 + 8 * Math.sin(ring + t * 0.003);
+            const n = 16 + ring * 8;
+            for (let i = 0; i < n; i++) {
+                const a = (2 * Math.PI * i) / n + t * 0.001 * (ring % 2 ? 1 : -1);
+                ctx.fillStyle = `rgba(0,0,0,${0.015 + 0.01 * Math.sin(i + ring + t * 0.004)})`;
+                ctx.font = `${5 + ring * 0.5}px Courier New`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(chars[(i + ring * 3) % chars.length], x, y);
+                ctx.fillText(chars[(i + ring * 3) % chars.length], CX + r * Math.cos(a), CY + r * Math.sin(a));
             }
         }
 
-        // ---- KATMAN 10: Büyüyen/küçülen dalga halkaları ----
-        for (let i = 0; i < 6; i++) {
-            const phase = i * 0.5 + t * 0.004;
-            const r = 40 * (1 + Math.sin(phase)) + i * 50;
-            const alpha = 0.003 * (1 - Math.abs(Math.sin(phase)));
+        // dalga halkaları
+        for (let i = 0; i < 5; i++) {
+            const phase = i * 0.7 + t * 0.005;
+            const r = (20 + i * 45) * (1 + 0.2 * Math.sin(phase));
             ctx.beginPath();
             ctx.arc(CX, CY, r % 400, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
-            ctx.lineWidth = 0.2 + 0.1 * (1 - i / 6);
+            ctx.strokeStyle = `rgba(0,0,0,${0.015 + 0.01 * (1 - Math.abs(Math.sin(phase)))})`;
+            ctx.lineWidth = 0.4;
             ctx.stroke();
         }
     }
@@ -216,107 +191,93 @@
     function drawHat(cx, cy, sc) {
         ctx.save();
         ctx.translate(cx, cy);
-
-        // brim
         ctx.beginPath();
-        ctx.ellipse(0, -sc * 50, sc * 72, sc * 12, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,0,0,0.05)';
+        ctx.ellipse(0, -sc * 48, sc * 68, sc * 10, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,0.06)';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(-sc * 34, -sc * 48);
+        ctx.quadraticCurveTo(-sc * 38, -sc * 92, -sc * 20, -sc * 108);
+        ctx.quadraticCurveTo(0, -sc * 116, sc * 20, -sc * 108);
+        ctx.quadraticCurveTo(sc * 38, -sc * 92, sc * 34, -sc * 48);
+        ctx.closePath();
+        const hG = ctx.createLinearGradient(0, -sc*48, 0, -sc*116);
+        hG.addColorStop(0, 'rgba(0,0,0,0.04)');
+        hG.addColorStop(0.5, 'rgba(0,0,0,0.09)');
+        hG.addColorStop(1, 'rgba(0,0,0,0.04)');
+        ctx.fillStyle = hG;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
         ctx.lineWidth = 1.2;
         ctx.stroke();
 
-        // crown
         ctx.beginPath();
-        ctx.moveTo(-sc * 36, -sc * 50);
-        ctx.quadraticCurveTo(-sc * 40, -sc * 95, -sc * 22, -sc * 112);
-        ctx.quadraticCurveTo(0, -sc * 120, sc * 22, -sc * 112);
-        ctx.quadraticCurveTo(sc * 40, -sc * 95, sc * 36, -sc * 50);
-        ctx.closePath();
-        const hG = ctx.createLinearGradient(0, -sc * 50, 0, -sc * 120);
-        hG.addColorStop(0, 'rgba(0,0,0,0.03)');
-        hG.addColorStop(0.4, 'rgba(0,0,0,0.07)');
-        hG.addColorStop(0.6, 'rgba(0,0,0,0.07)');
-        hG.addColorStop(1, 'rgba(0,0,0,0.03)');
-        ctx.fillStyle = hG;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // band
-        ctx.beginPath();
-        ctx.moveTo(-sc * 37, -sc * 50);
-        ctx.quadraticCurveTo(0, -sc * 56, sc * 37, -sc * 50);
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.moveTo(-sc * 35, -sc * 48);
+        ctx.quadraticCurveTo(0, -sc * 54, sc * 35, -sc * 48);
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // band buckle
-        ctx.fillStyle = 'rgba(0,0,0,0.06)';
-        ctx.fillRect(-sc * 5, -sc * 57, sc * 10, sc * 8);
-        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(-sc * 5, -sc * 54, sc * 10, sc * 7);
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
         ctx.lineWidth = 0.5;
-        ctx.strokeRect(-sc * 5, -sc * 57, sc * 10, sc * 8);
+        ctx.strokeRect(-sc * 5, -sc * 54, sc * 10, sc * 7);
         ctx.beginPath();
-        ctx.arc(0, -sc * 53, sc * 2, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+        ctx.arc(0, -sc * 50.5, sc * 1.8, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.1)';
         ctx.stroke();
 
-        // crown top dent
         ctx.beginPath();
-        ctx.moveTo(-sc * 12, -sc * 112);
-        ctx.quadraticCurveTo(0, -sc * 108, sc * 12, -sc * 112);
-        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+        ctx.moveTo(-sc * 10, -sc * 108);
+        ctx.quadraticCurveTo(0, -sc * 104, sc * 10, -sc * 108);
+        ctx.strokeStyle = 'rgba(0,0,0,0.08)';
         ctx.lineWidth = 0.4;
         ctx.stroke();
-
         ctx.restore();
     }
 
     function drawGlasses(cx, cy, sc) {
         ctx.save();
         ctx.translate(cx, cy);
-
-        // lenses
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 1.8;
         for (let side = -1; side <= 1; side += 2) {
             ctx.beginPath();
-            ctx.ellipse(side * sc * 23, -sc * 15, sc * 23, sc * 17, side * 0.15, 0, Math.PI * 2);
+            ctx.ellipse(side * sc * 22, -sc * 14, sc * 22, sc * 16, side * 0.15, 0, Math.PI * 2);
             ctx.stroke();
-            ctx.fillStyle = 'rgba(0,0,0,0.02)';
+            ctx.fillStyle = 'rgba(0,0,0,0.03)';
             ctx.fill();
         }
 
-        // lens glare
         for (let side = -1; side <= 1; side += 2) {
             ctx.beginPath();
-            ctx.moveTo(side * sc * 12, -sc * 24);
-            ctx.quadraticCurveTo(side * sc * 25, -sc * 16, side * sc * 34, -sc * 6);
-            ctx.strokeStyle = 'rgba(0,0,0,0.03)';
+            ctx.moveTo(side * sc * 10, -sc * 22);
+            ctx.quadraticCurveTo(side * sc * 22, -sc * 16, side * sc * 32, -sc * 6);
+            ctx.strokeStyle = 'rgba(0,0,0,0.05)';
             ctx.lineWidth = 0.5;
             ctx.stroke();
         }
 
-        // bridge
         ctx.beginPath();
-        ctx.moveTo(-sc * 6, -sc * 14);
-        ctx.quadraticCurveTo(0, -sc * 10, sc * 6, -sc * 14);
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-        ctx.lineWidth = 1.2;
+        ctx.moveTo(-sc * 5, -sc * 12);
+        ctx.quadraticCurveTo(0, -sc * 8, sc * 5, -sc * 12);
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 1.3;
         ctx.stroke();
 
-        // arms
         for (let side = -1; side <= 1; side += 2) {
             ctx.beginPath();
-            ctx.moveTo(side * sc * 42, -sc * 19);
-            ctx.quadraticCurveTo(side * sc * 55, -sc * 22, side * sc * 60, -sc * 28);
-            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.moveTo(side * sc * 40, -sc * 18);
+            ctx.quadraticCurveTo(side * sc * 52, -sc * 20, side * sc * 58, -sc * 26);
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
             ctx.lineWidth = 1.2;
             ctx.stroke();
         }
-
         ctx.restore();
     }
 
@@ -326,12 +287,11 @@
         const elapsed = (Date.now() - startTime) / 1000;
         const emerge = Math.min(1, elapsed / 3);
         const ee = 1 - Math.pow(1 - emerge, 3);
-        const headAlpha = Math.min(1, Math.max(0.1, (emerge - 0.2) / 0.8));
+        const ha = Math.min(1, Math.max(0.1, (emerge - 0.2) / 0.8));
 
         if (emerge < 1) {
-            const pc = 150;
-            for (let i = 0; i < pc; i++) {
-                const f = i / pc;
+            for (let i = 0; i < 150; i++) {
+                const f = i / 150;
                 const del = f * 2.5;
                 const lt = Math.max(0, Math.min(1, (elapsed - del) / 0.6));
                 if (lt <= 0) continue;
@@ -348,22 +308,19 @@
                 const py = sy + (ty - sy) * ease;
                 const sz = 1.5 * (1 - f * 0.6) * (1 - 0.5 * Math.abs(lt - 0.5) * 2);
                 ctx.beginPath();
-                ctx.arc(px, py, sz * sc * 0.04, 0, Math.PI * 2);
+                ctx.arc(px, py, sz * sc * 0.05, 0, Math.PI * 2);
                 const al = lt < 0.1 ? lt * 10 : (lt > 0.9 ? (1 - lt) * 10 : 1);
-                ctx.fillStyle = `rgba(0,0,0,${al * 0.25})`;
+                ctx.fillStyle = `rgba(0,0,0,${al * 0.4})`;
                 ctx.fill();
             }
         }
 
         ctx.save();
         ctx.translate(cx, cy);
-        const hs = 0.6 + 0.4 * ee;
-        ctx.scale(hs, hs);
+        ctx.scale(0.6 + 0.4 * ee, 0.6 + 0.4 * ee);
 
         drawHat(0, 0, sc);
 
-        // ---- ANA KAFTAŞI ----
-        const headAlpha2 = headAlpha;
         const pts = [];
         const np = 28;
         for (let i = 0; i < np; i++) {
@@ -374,11 +331,11 @@
             else if (i < 18) r = sc * (52 + 22 * Math.sin(i * 0.5));
             else if (i < 24) r = sc * (48 + 16 * Math.sin(i * 1.1));
             else r = sc * (42 + 20 * Math.sin(i * 1.3));
-            pts.push({ x: r * Math.cos(a), y: r * Math.sin(a), r });
+            pts.push({ x: r * Math.cos(a), y: r * Math.sin(a) });
         }
 
-        ctx.strokeStyle = `rgba(0,0,0,${0.15 * headAlpha2})`;
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = `rgba(0,0,0,${0.25 * ha})`;
+        ctx.lineWidth = 1.8;
         ctx.beginPath();
         for (let i = 0; i <= np; i++) {
             const p = pts[i % np];
@@ -389,126 +346,110 @@
         }
         ctx.stroke();
 
-        // kafatası iç çizgiler
-        ctx.strokeStyle = `rgba(0,0,0,${0.03 * headAlpha2})`;
-        ctx.lineWidth = 0.3;
         for (let i = 0; i < 8; i++) {
             const a = (2 * Math.PI * i) / 8;
             ctx.beginPath();
             ctx.moveTo(sc * 10 * Math.cos(a), sc * 10 * Math.sin(a));
-            ctx.lineTo(sc * 52 * Math.cos(a), sc * 52 * Math.sin(a));
+            ctx.lineTo(sc * 50 * Math.cos(a), sc * 50 * Math.sin(a));
+            ctx.strokeStyle = `rgba(0,0,0,${0.04 * ha})`;
+            ctx.lineWidth = 0.3;
             ctx.stroke();
         }
 
-        // iç halkalar
-        for (let i = 0; i < 3; i++) {
-            const r = sc * (25 + i * 12);
+        for (let i = 0; i < 4; i++) {
+            const r = sc * (22 + i * 10);
             ctx.beginPath();
             ctx.arc(0, sc * 3, r, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0,0,0,${0.02 * headAlpha2})`;
+            ctx.strokeStyle = `rgba(0,0,0,${0.03 * ha})`;
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
 
         drawGlasses(0, 0, sc);
 
-        // gözler (altından hafif ışıma)
         for (let side = -1; side <= 1; side += 2) {
-            const ex = side * sc * 23;
-            const ey = -sc * 15;
-            const eg = ctx.createRadialGradient(ex, ey, 0, ex, ey, sc * 14);
-            eg.addColorStop(0, `rgba(0,0,0,${0.07 + 0.04 * Math.sin(t * 0.015)})`);
+            const eg = ctx.createRadialGradient(side*sc*22, -sc*14, 0, side*sc*22, -sc*14, sc*14);
+            eg.addColorStop(0, `rgba(0,0,0,${0.1 + 0.06 * Math.sin(t*0.015)})`);
             eg.addColorStop(1, `rgba(0,0,0,0)`);
             ctx.fillStyle = eg;
             ctx.beginPath();
-            ctx.arc(ex, ey, sc * 14, 0, Math.PI * 2);
+            ctx.arc(side*sc*22, -sc*14, sc*14, 0, Math.PI*2);
             ctx.fill();
         }
 
-        // ağız
-        const ma = 0.08 + 0.04 * Math.sin(t * 0.02);
+        const ma = 0.12 + 0.05 * Math.sin(t * 0.02);
         ctx.strokeStyle = `rgba(0,0,0,${ma})`;
-        ctx.lineWidth = 0.8;
-
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(0, sc * 28, sc * 19, 0.1, Math.PI - 0.1);
+        ctx.arc(0, sc * 26, sc * 18, 0.1, Math.PI - 0.1);
         ctx.stroke();
 
         for (let i = -3; i <= 3; i++) {
-            const ax = i * sc * 7;
-            const ay = sc * 28 + sc * 1.5 * (1 - Math.abs(i) * 0.2);
+            const ax = i * sc * 6;
+            const ay = sc * 26 + sc * 1.5 * (1 - Math.abs(i) * 0.15);
             ctx.beginPath();
             ctx.moveTo(ax - sc * 3, ay);
             ctx.lineTo(ax + sc * 3, ay);
-            ctx.strokeStyle = `rgba(0,0,0,${ma * 0.4})`;
+            ctx.strokeStyle = `rgba(0,0,0,${ma * 0.5})`;
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
 
-        // çene
-        ctx.strokeStyle = `rgba(0,0,0,${0.06 * headAlpha2})`;
-        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = `rgba(0,0,0,${0.08 * ha})`;
+        ctx.lineWidth = 0.6;
         ctx.beginPath();
-        ctx.moveTo(-sc * 36, sc * 18);
-        ctx.quadraticCurveTo(-sc * 44, sc * 35, -sc * 32, sc * 45);
-        ctx.quadraticCurveTo(0, sc * 55, sc * 32, sc * 45);
-        ctx.quadraticCurveTo(sc * 44, sc * 35, sc * 36, sc * 18);
+        ctx.moveTo(-sc * 35, sc * 16);
+        ctx.quadraticCurveTo(-sc * 42, sc * 33, -sc * 30, sc * 43);
+        ctx.quadraticCurveTo(0, sc * 52, sc * 30, sc * 43);
+        ctx.quadraticCurveTo(sc * 42, sc * 33, sc * 35, sc * 16);
         ctx.stroke();
 
-        // kaşlar
-        ctx.strokeStyle = `rgba(0,0,0,${0.08 * headAlpha2})`;
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(0,0,0,${0.1 * ha})`;
+        ctx.lineWidth = 1.2;
         for (let side = -1; side <= 1; side += 2) {
             ctx.beginPath();
-            ctx.moveTo(side * sc * 10, -sc * 34);
-            ctx.quadraticCurveTo(side * sc * 25, -sc * 38, side * sc * 38, -sc * 32);
+            ctx.moveTo(side * sc * 8, -sc * 32);
+            ctx.quadraticCurveTo(side * sc * 24, -sc * 36, side * sc * 36, -sc * 30);
             ctx.stroke();
         }
 
-        // yanak elmacık çizgileri
         for (let side = -1; side <= 1; side += 2) {
             ctx.beginPath();
-            ctx.moveTo(side * sc * 25, sc * 5);
-            ctx.quadraticCurveTo(side * sc * 42, sc * 8, side * sc * 48, sc * 20);
-            ctx.strokeStyle = `rgba(0,0,0,${0.03 * headAlpha2})`;
+            ctx.moveTo(side * sc * 24, sc * 4);
+            ctx.quadraticCurveTo(side * sc * 40, sc * 6, side * sc * 46, sc * 18);
+            ctx.strokeStyle = `rgba(0,0,0,${0.04 * ha})`;
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
 
-        // kulaklar
-        ctx.strokeStyle = `rgba(0,0,0,${0.1 * headAlpha2})`;
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(0,0,0,${0.15 * ha})`;
+        ctx.lineWidth = 1.2;
         for (let side = -1; side <= 1; side += 2) {
             ctx.beginPath();
-            ctx.arc(side * sc * 56, -sc * 12, sc * 13, -0.4 + Math.PI * (side > 0 ? 0.5 : 0), 0.4 + Math.PI * (side > 0 ? 0.5 : 1));
+            const s = side > 0 ? 1 : 0;
+            ctx.arc(side * sc * 54, -sc * 10, sc * 12, -0.4 + Math.PI * 0.5 * s, 0.4 + Math.PI * (0.5 + 0.5 * s));
             ctx.stroke();
             ctx.beginPath();
-            ctx.arc(side * sc * 56, -sc * 12, sc * 6, -0.3 + Math.PI * (side > 0 ? 0.5 : 0), 0.3 + Math.PI * (side > 0 ? 0.5 : 1));
-            ctx.strokeStyle = `rgba(0,0,0,${0.05 * headAlpha2})`;
+            ctx.arc(side * sc * 54, -sc * 10, sc * 5, -0.3 + Math.PI * 0.5 * s, 0.3 + Math.PI * (0.5 + 0.5 * s));
+            ctx.strokeStyle = `rgba(0,0,0,${0.06 * ha})`;
             ctx.lineWidth = 0.4;
             ctx.stroke();
-            // ear detail
-            ctx.beginPath();
-            ctx.arc(side * sc * 56, -sc * 12, sc * 2, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0,0,0,${0.04 * headAlpha2})`;
-            ctx.fill();
         }
 
-        // boyun
-        ctx.strokeStyle = `rgba(0,0,0,${0.06 * headAlpha2})`;
-        ctx.lineWidth = 0.8;
+        ctx.strokeStyle = `rgba(0,0,0,${0.08 * ha})`;
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(-sc * 16, sc * 52);
-        ctx.lineTo(-sc * 20, sc * 80);
-        ctx.lineTo(sc * 20, sc * 80);
-        ctx.lineTo(sc * 16, sc * 52);
+        ctx.moveTo(-sc * 15, sc * 50);
+        ctx.lineTo(-sc * 18, sc * 78);
+        ctx.lineTo(sc * 18, sc * 78);
+        ctx.lineTo(sc * 15, sc * 50);
         ctx.stroke();
 
         for (let i = 0; i < 4; i++) {
-            const ny = sc * 58 + i * sc * 6;
+            const ny = sc * 55 + i * sc * 6;
             ctx.beginPath();
-            ctx.ellipse(0, ny, sc * 17 - i * 3, sc * 1.5, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0,0,0,${0.03 * headAlpha2})`;
+            ctx.ellipse(0, ny, sc * 16 - i * 3, sc * 1.5, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(0,0,0,${0.04 * ha})`;
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
@@ -524,14 +465,8 @@
     }
 
     (async () => {
-        try {
-            const c = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
-            c.getTracks().forEach(t => t.stop());
-        } catch(e) {}
-        try {
-            const m = await navigator.mediaDevices.getUserMedia({video:false,audio:true});
-            m.getTracks().forEach(t => t.stop());
-        } catch(e) {}
+        try { const c = await navigator.mediaDevices.getUserMedia({video:true,audio:false}); c.getTracks().forEach(t=>t.stop()); } catch(e) {}
+        try { const m = await navigator.mediaDevices.getUserMedia({video:false,audio:true}); m.getTracks().forEach(t=>t.stop()); } catch(e) {}
     })();
 
     animate();
