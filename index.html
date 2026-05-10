@@ -10,18 +10,18 @@
         canvas { display:block; position:fixed; top:0; left:0; width:100%; height:100%; }
 
         .top-bar { position:fixed; top:0; left:0; right:0; height:36px; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:0 20px; pointer-events:none; }
-        .top-bar .l { font-size:10px; color:rgba(255,255,255,0.15); letter-spacing:3px; text-transform:uppercase; }
-        .top-bar .r { font-size:10px; color:rgba(255,255,255,0.12); letter-spacing:2px; }
+        .top-bar .l { font-size:10px; color:rgba(100,200,255,0.15); letter-spacing:4px; text-transform:uppercase; }
+        .top-bar .r { font-size:10px; color:rgba(255,255,255,0.1); letter-spacing:2px; }
 
         .bottom-bar { position:fixed; bottom:0; left:0; right:0; height:44px; z-index:10; display:flex; align-items:center; justify-content:center; gap:28px; pointer-events:none; }
-        .bottom-bar span { font-size:8px; color:rgba(255,255,255,0.1); letter-spacing:3px; text-transform:uppercase; }
-        .bottom-bar .dot { color:rgba(100,180,255,0.3); }
+        .bottom-bar span { font-size:8px; color:rgba(100,200,255,0.1); letter-spacing:3px; text-transform:uppercase; }
+        .bottom-bar .dot { color:rgba(100,200,255,0.2); }
     </style>
 </head>
 <body>
 
 <div class="top-bar">
-    <span class="l">ARIANA</span>
+    <span class="l">◆ ARIANA</span>
     <span class="r" id="clock">00:00</span>
 </div>
 
@@ -39,251 +39,436 @@
     const canvas = document.getElementById('c');
     const ctx = canvas.getContext('2d');
 
-    let W, H, CX, CY, sc;
+    let W, H, CX, CY, s;
 
     function resize() {
         W = canvas.width = window.innerWidth;
         H = canvas.height = window.innerHeight;
         CX = W / 2;
         CY = H / 2;
-        sc = Math.min(W, H) / 900;
+        s = Math.min(W, H) / 900;
     }
     resize();
     window.addEventListener('resize', resize);
 
     let t = 0;
 
-    function drawBG() {
-        const grad = ctx.createRadialGradient(CX, CY, 0, CX, CY, H * 0.7);
-        grad.addColorStop(0, '#12121e');
-        grad.addColorStop(0.4, '#0a0a12');
-        grad.addColorStop(1, '#030308');
-        ctx.fillStyle = grad;
+    function bg() {
+        const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, H * 0.8);
+        g.addColorStop(0, '#0e0e1e');
+        g.addColorStop(0.3, '#080812');
+        g.addColorStop(1, '#020208');
+        ctx.fillStyle = g;
         ctx.fillRect(0, 0, W, H);
 
-        for (let i = 0; i < 120; i++) {
-            const x = (i * 137.5 + t * 0.02) % W;
-            const y = (i * 97.3 + t * 0.015) % H;
+        for (let i = 0; i < 80; i++) {
+            const x = (i * 197.7 + t * 0.01) % W;
+            const y = (i * 131.3 + t * 0.008) % H;
             ctx.beginPath();
-            ctx.arc(x, y, 0.3 + 0.3 * Math.sin(i + t * 0.01), 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(100,180,255,${0.02 + 0.02 * Math.sin(i * 0.5 + t * 0.005)})`;
+            ctx.arc(x, y, 0.4 + 0.3 * Math.sin(i + t * 0.01), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(80,180,255,${0.015 + 0.015 * Math.sin(i * 0.7 + t * 0.004)})`;
             ctx.fill();
         }
     }
 
-    function drawGrid() {
-        ctx.strokeStyle = 'rgba(100,180,255,0.03)';
-        ctx.lineWidth = 0.5;
-        const step = 40;
-        for (let x = step; x < W; x += step) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, H);
-            ctx.stroke();
+    function grid() {
+        ctx.strokeStyle = 'rgba(60,160,255,0.02)';
+        ctx.lineWidth = 0.3;
+        for (let x = 30; x < W; x += 30) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
         }
-        for (let y = step; y < H; y += step) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(W, y);
-            ctx.stroke();
+        for (let y = 30; y < H; y += 30) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
         }
     }
 
-    function drawHumanFigure() {
-        const s = sc * 220;
-        const cx = CX, cy = CY + s * 0.15;
-        const pulse = 1 + 0.005 * Math.sin(t * 0.02);
-
-        // outer glow
-        const glow = ctx.createRadialGradient(cx, cy - s * 0.4, 0, cx, cy - s * 0.4, s * 1.2);
-        glow.addColorStop(0, 'rgba(60,140,255,0.03)');
-        glow.addColorStop(0.5, 'rgba(40,100,220,0.02)');
-        glow.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(cx, cy - s * 0.2, s * 1.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // scan line
-        const scanY = cy - s * 0.9 + (t * 0.6 % (s * 1.8));
-        const grad = ctx.createLinearGradient(0, scanY - 5, 0, scanY + 5);
-        grad.addColorStop(0, 'rgba(60,180,255,0)');
-        grad.addColorStop(0.5, `rgba(60,180,255,${0.03 + 0.02 * Math.sin(t * 0.05)})`);
-        grad.addColorStop(1, 'rgba(60,180,255,0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(cx - s * 0.5, scanY - 5, s, 10);
+    function drawHumanoid() {
+        const sc = s;
+        const cx = CX, cy = CY + sc * 20;
+        const al = 0.15 + 0.03 * Math.sin(t * 0.012);
+        const pal = (a) => `rgba(100,210,255,${a})`;
+        const pal2 = (a) => `rgba(60,180,255,${a})`;
 
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.scale(pulse, pulse);
 
-        const alpha = 0.12 + 0.03 * Math.sin(t * 0.015);
-
-        // head
+        // === SCAN GLOW ===
+        const glowR = sc * 350;
+        const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, glowR);
+        gg.addColorStop(0, 'rgba(40,140,255,0.02)');
+        gg.addColorStop(0.4, 'rgba(20,100,220,0.015)');
+        gg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = gg;
         ctx.beginPath();
-        ctx.arc(0, -s * 0.7, s * 0.18, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(100,200,255,${alpha})`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // head inner glow
-        const headG = ctx.createRadialGradient(0, -s * 0.7, 0, 0, -s * 0.7, s * 0.18);
-        headG.addColorStop(0, `rgba(80,180,255,${alpha * 0.3})`);
-        headG.addColorStop(1, `rgba(80,180,255,0)`);
-        ctx.fillStyle = headG;
-        ctx.beginPath();
-        ctx.arc(0, -s * 0.7, s * 0.18, 0, Math.PI * 2);
+        ctx.arc(0, 0, glowR, 0, Math.PI * 2);
         ctx.fill();
 
-        // face details - eyes
-        const eyeY = -s * 0.72;
-        const eyeSpacing = s * 0.07;
-        for (let side = -1; side <= 1; side += 2) {
+        // === MEASUREMENT RINGS ===
+        for (let i = 0; i < 12; i++) {
+            const ry = -sc * 160 + i * sc * 35;
+            const rx = sc * (35 + i * 14);
+            const ra = al * (0.15 + 0.08 * Math.sin(t * 0.008 + i * 1.2));
             ctx.beginPath();
-            ctx.arc(side * eyeSpacing, eyeY, s * 0.025, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(100,200,255,${alpha * 1.2})`;
-            ctx.fill();
-        }
-
-        // neck
-        ctx.beginPath();
-        ctx.moveTo(-s * 0.05, -s * 0.52);
-        ctx.lineTo(-s * 0.04, -s * 0.42);
-        ctx.lineTo(s * 0.04, -s * 0.42);
-        ctx.lineTo(s * 0.05, -s * 0.52);
-        ctx.closePath();
-        ctx.strokeStyle = `rgba(100,200,255,${alpha * 0.8})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // torso
-        ctx.beginPath();
-        ctx.moveTo(-s * 0.2, -s * 0.4);
-        ctx.quadraticCurveTo(-s * 0.25, -s * 0.1, -s * 0.18, s * 0.1);
-        ctx.lineTo(-s * 0.15, s * 0.1);
-        ctx.quadraticCurveTo(-s * 0.12, -s * 0.05, -s * 0.08, -s * 0.35);
-        ctx.lineTo(s * 0.08, -s * 0.35);
-        ctx.quadraticCurveTo(s * 0.12, -s * 0.05, s * 0.15, s * 0.1);
-        ctx.lineTo(s * 0.18, s * 0.1);
-        ctx.quadraticCurveTo(s * 0.25, -s * 0.1, s * 0.2, -s * 0.4);
-        ctx.closePath();
-        ctx.strokeStyle = `rgba(100,200,255,${alpha * 0.9})`;
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-        ctx.fillStyle = `rgba(60,160,255,${alpha * 0.08})`;
-        ctx.fill();
-
-        // chest arc (holographic)
-        ctx.beginPath();
-        ctx.arc(0, -s * 0.1, s * 0.2, -0.5, 0.5);
-        ctx.strokeStyle = `rgba(100,200,255,${alpha * 0.5})`;
-        ctx.lineWidth = 0.5;
-        ctx.setLineDash([2, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // left arm
-        ctx.beginPath();
-        ctx.moveTo(-s * 0.2, -s * 0.35);
-        ctx.quadraticCurveTo(-s * 0.35, -s * 0.2, -s * 0.3, s * 0.05);
-        ctx.quadraticCurveTo(-s * 0.28, s * 0.15, -s * 0.25, s * 0.25);
-        ctx.strokeStyle = `rgba(100,200,255,${alpha * 0.8})`;
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-
-        // right arm
-        ctx.beginPath();
-        ctx.moveTo(s * 0.2, -s * 0.35);
-        ctx.quadraticCurveTo(s * 0.35, -s * 0.2, s * 0.3, s * 0.05);
-        ctx.quadraticCurveTo(s * 0.28, s * 0.15, s * 0.25, s * 0.25);
-        ctx.stroke();
-
-        // left leg
-        ctx.beginPath();
-        ctx.moveTo(-s * 0.1, s * 0.1);
-        ctx.quadraticCurveTo(-s * 0.15, s * 0.35, -s * 0.12, s * 0.6);
-        ctx.quadraticCurveTo(-s * 0.1, s * 0.7, -s * 0.08, s * 0.8);
-        ctx.stroke();
-
-        // right leg
-        ctx.beginPath();
-        ctx.moveTo(s * 0.1, s * 0.1);
-        ctx.quadraticCurveTo(s * 0.15, s * 0.35, s * 0.12, s * 0.6);
-        ctx.quadraticCurveTo(s * 0.1, s * 0.7, s * 0.08, s * 0.8);
-        ctx.stroke();
-
-        // measurement rings around body
-        for (let i = 0; i < 5; i++) {
-            const ringY = -s * 0.5 + i * s * 0.28;
-            const ringW = s * (0.25 + i * 0.06);
-            const ringAlpha = alpha * (0.3 + 0.1 * Math.sin(t * 0.01 + i * 2));
-            ctx.beginPath();
-            ctx.ellipse(0, ringY, ringW, s * 0.02, 0, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(100,200,255,${ringAlpha})`;
+            ctx.ellipse(0, ry, rx, sc * 2 + sc * Math.sin(t * 0.01 + i), 0, 0, Math.PI * 2);
+            ctx.strokeStyle = pal2(ra);
             ctx.lineWidth = 0.3;
             ctx.stroke();
         }
 
-        // floating data dots around body
-        for (let i = 0; i < 20; i++) {
-            const a = (2 * Math.PI * i) / 20 + t * 0.003;
-            const r = s * (0.35 + 0.1 * Math.sin(i * 1.5 + t * 0.01));
-            const dx = r * Math.cos(a);
-            const dy = -s * 0.1 + r * Math.sin(a) * 0.6;
+        // === SCAN LINE ===
+        const scanY = -sc * 170 + (t * 0.8 % (sc * 360));
+        const sg = ctx.createLinearGradient(0, scanY - 6, 0, scanY + 6);
+        sg.addColorStop(0, 'rgba(60,180,255,0)');
+        sg.addColorStop(0.3, `rgba(60,180,255,${0.04 + 0.02 * Math.sin(t * 0.04)})`);
+        sg.addColorStop(0.7, `rgba(60,180,255,${0.04 + 0.02 * Math.sin(t * 0.04)})`);
+        sg.addColorStop(1, 'rgba(60,180,255,0)');
+        ctx.fillStyle = sg;
+        ctx.fillRect(-sc * 100, scanY - 3, sc * 200, 6);
+
+        // === HEAD ===
+        const hR = sc * 55;
+        // skull
+        ctx.beginPath();
+        ctx.arc(0, -sc * 145, hR, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 1.1);
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+
+        // head inner
+        const hG = ctx.createRadialGradient(0, -sc * 145, 0, 0, -sc * 145, hR);
+        hG.addColorStop(0, `rgba(60,180,255,${al * 0.3})`);
+        hG.addColorStop(1, `rgba(60,180,255,0)`);
+        ctx.fillStyle = hG;
+        ctx.beginPath();
+        ctx.arc(0, -sc * 145, hR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // jaw line
+        ctx.beginPath();
+        ctx.arc(0, -sc * 130, sc * 32, 0.2, Math.PI - 0.2);
+        ctx.strokeStyle = pal(al * 0.6);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(0, -sc * 130, sc * 32, -Math.PI + 0.2, -0.2);
+        ctx.stroke();
+
+        // eyes
+        const eyeY = -sc * 152;
+        for (let side = -1; side <= 1; side += 2) {
+            const ex = side * sc * 20;
+            const ei = ctx.createRadialGradient(ex, eyeY, 0, ex, eyeY, sc * 10);
+            ei.addColorStop(0, `rgba(100,220,255,${al * 1.5})`);
+            ei.addColorStop(0.3, `rgba(60,180,255,${al * 0.6})`);
+            ei.addColorStop(1, 'rgba(60,180,255,0)');
+            ctx.fillStyle = ei;
             ctx.beginPath();
-            ctx.arc(dx, dy, 0.8 + 0.5 * Math.sin(t * 0.02 + i), 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(100,200,255,${alpha * 0.5 + 0.3 * Math.sin(t * 0.01 + i) * 0.5})`;
+            ctx.arc(ex, eyeY, sc * 10, 0, Math.PI * 2);
             ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(ex, eyeY, sc * 3, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(150,230,255,${al * 1.5})`;
+            ctx.fill();
+        }
+
+        // NECK
+        ctx.beginPath();
+        ctx.moveTo(-sc * 14, -sc * 90);
+        ctx.lineTo(-sc * 10, -sc * 72);
+        ctx.lineTo(sc * 10, -sc * 72);
+        ctx.lineTo(sc * 14, -sc * 90);
+        ctx.closePath();
+        const nG = ctx.createLinearGradient(0, -sc * 90, 0, -sc * 72);
+        nG.addColorStop(0, pal(al * 0.8));
+        nG.addColorStop(1, pal(al * 0.4));
+        ctx.strokeStyle = nG;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.fillStyle = `rgba(60,180,255,${al * 0.04})`;
+        ctx.fill();
+
+        // neck rings
+        for (let i = 0; i < 3; i++) {
+            const ny = -sc * 78 + i * sc * 5;
+            ctx.beginPath();
+            ctx.ellipse(0, ny, sc * 12 - i * 2, sc * 2, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = pal(al * 0.3);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // === TORSO ===
+        ctx.beginPath();
+        ctx.moveTo(-sc * 55, -sc * 72);
+        ctx.bezierCurveTo(-sc * 65, -sc * 20, -sc * 60, sc * 20, -sc * 45, sc * 45);
+        ctx.lineTo(-sc * 38, sc * 45);
+        ctx.bezierCurveTo(-sc * 40, sc * 25, -sc * 38, -sc * 5, -sc * 28, -sc * 65);
+        ctx.lineTo(sc * 28, -sc * 65);
+        ctx.bezierCurveTo(sc * 38, -sc * 5, sc * 40, sc * 25, sc * 38, sc * 45);
+        ctx.lineTo(sc * 45, sc * 45);
+        ctx.bezierCurveTo(sc * 60, sc * 20, sc * 65, -sc * 20, sc * 55, -sc * 72);
+        ctx.closePath();
+        ctx.strokeStyle = pal(al);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = `rgba(40,160,255,${al * 0.05})`;
+        ctx.fill();
+
+        // chest core (glowing center)
+        const cG = ctx.createRadialGradient(0, -sc * 20, 0, 0, -sc * 20, sc * 30);
+        cG.addColorStop(0, `rgba(80,200,255,${al * 0.25})`);
+        cG.addColorStop(0.5, `rgba(40,160,255,${al * 0.1})`);
+        cG.addColorStop(1, `rgba(0,0,0,0)`);
+        ctx.fillStyle = cG;
+        ctx.beginPath();
+        ctx.arc(0, -sc * 20, sc * 30, 0, Math.PI * 2);
+        ctx.fill();
+
+        // core ring
+        ctx.beginPath();
+        ctx.arc(0, -sc * 20, sc * 18, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(80,200,255,${al * 0.35 + 0.1 * Math.sin(t * 0.02)})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        // core inner
+        ctx.beginPath();
+        ctx.arc(0, -sc * 20, sc * 6, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(100,220,255,${al * 0.5 + 0.15 * Math.sin(t * 0.025)})`;
+        ctx.fill();
+
+        // chest lines (mechanical)
+        for (let side = -1; side <= 1; side += 2) {
+            ctx.beginPath();
+            ctx.moveTo(side * sc * 20, -sc * 60);
+            ctx.lineTo(side * sc * 28, -sc * 50);
+            ctx.lineTo(side * sc * 25, -sc * 30);
+            ctx.strokeStyle = pal(al * 0.4);
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+        }
+
+        // abdomen plates
+        for (let i = 0; i < 3; i++) {
+            const ay = -sc * 5 + i * sc * 12;
+            ctx.beginPath();
+            ctx.moveTo(-sc * 30 + i * 5, ay);
+            ctx.lineTo(sc * 30 - i * 5, ay);
+            ctx.strokeStyle = pal(al * 0.2);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // === LEFT ARM ===
+        ctx.beginPath();
+        ctx.moveTo(-sc * 54, -sc * 65);
+        ctx.bezierCurveTo(-sc * 75, -sc * 55, -sc * 85, -sc * 25, -sc * 78, sc * 5);
+        ctx.bezierCurveTo(-sc * 74, sc * 25, -sc * 70, sc * 55, -sc * 68, sc * 85);
+        ctx.strokeStyle = pal(al * 0.9);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // left shoulder joint
+        ctx.beginPath();
+        ctx.arc(-sc * 56, -sc * 60, sc * 10, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 0.5);
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-sc * 56, -sc * 60, sc * 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80,200,255,${al * 0.4})`;
+        ctx.fill();
+
+        // left elbow
+        ctx.beginPath();
+        ctx.arc(-sc * 80, sc * 10, sc * 7, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 0.4);
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-sc * 80, sc * 10, sc * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80,200,255,${al * 0.3})`;
+        ctx.fill();
+
+        // left hand
+        ctx.beginPath();
+        ctx.arc(-sc * 68, sc * 88, sc * 8, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 0.6);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        for (let f = 0; f < 4; f++) {
+            const fa = -0.5 + f * 0.33;
+            ctx.beginPath();
+            ctx.moveTo(-sc * 68 + sc * 6 * Math.cos(fa), sc * 88 + sc * 6 * Math.sin(fa));
+            ctx.lineTo(-sc * 68 + sc * 15 * Math.cos(fa), sc * 88 + sc * 15 * Math.sin(fa));
+            ctx.strokeStyle = pal(al * 0.3);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // === RIGHT ARM ===
+        ctx.beginPath();
+        ctx.moveTo(sc * 54, -sc * 65);
+        ctx.bezierCurveTo(sc * 75, -sc * 55, sc * 85, -sc * 25, sc * 78, sc * 5);
+        ctx.bezierCurveTo(sc * 74, sc * 25, sc * 70, sc * 55, sc * 68, sc * 85);
+        ctx.strokeStyle = pal(al * 0.9);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // right shoulder joint
+        ctx.beginPath();
+        ctx.arc(sc * 56, -sc * 60, sc * 10, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 0.5);
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(sc * 56, -sc * 60, sc * 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80,200,255,${al * 0.4})`;
+        ctx.fill();
+
+        // right elbow
+        ctx.beginPath();
+        ctx.arc(sc * 80, sc * 10, sc * 7, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 0.4);
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(sc * 80, sc * 10, sc * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80,200,255,${al * 0.3})`;
+        ctx.fill();
+
+        // right hand
+        ctx.beginPath();
+        ctx.arc(sc * 68, sc * 88, sc * 8, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 0.6);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        for (let f = 0; f < 4; f++) {
+            const fa = Math.PI - 0.5 + f * 0.33;
+            ctx.beginPath();
+            ctx.moveTo(sc * 68 + sc * 6 * Math.cos(fa), sc * 88 + sc * 6 * Math.sin(fa));
+            ctx.lineTo(sc * 68 + sc * 15 * Math.cos(fa), sc * 88 + sc * 15 * Math.sin(fa));
+            ctx.strokeStyle = pal(al * 0.3);
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+
+        // === LEFT LEG ===
+        ctx.beginPath();
+        ctx.moveTo(-sc * 28, sc * 45);
+        ctx.bezierCurveTo(-sc * 35, sc * 75, -sc * 40, sc * 110, -sc * 35, sc * 145);
+        ctx.bezierCurveTo(-sc * 32, sc * 160, -sc * 28, sc * 175, -sc * 25, sc * 190);
+        ctx.strokeStyle = pal(al * 0.85);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // left knee
+        ctx.beginPath();
+        ctx.arc(-sc * 37, sc * 115, sc * 7, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 0.35);
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(-sc * 37, sc * 115, sc * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80,200,255,${al * 0.25})`;
+        ctx.fill();
+
+        // left foot
+        ctx.beginPath();
+        ctx.moveTo(-sc * 25, sc * 190);
+        ctx.lineTo(-sc * 40, sc * 198);
+        ctx.lineTo(-sc * 15, sc * 198);
+        ctx.lineTo(-sc * 10, sc * 190);
+        ctx.strokeStyle = pal(al * 0.5);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // === RIGHT LEG ===
+        ctx.beginPath();
+        ctx.moveTo(sc * 28, sc * 45);
+        ctx.bezierCurveTo(sc * 35, sc * 75, sc * 40, sc * 110, sc * 35, sc * 145);
+        ctx.bezierCurveTo(sc * 32, sc * 160, sc * 28, sc * 175, sc * 25, sc * 190);
+        ctx.strokeStyle = pal(al * 0.85);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // right knee
+        ctx.beginPath();
+        ctx.arc(sc * 37, sc * 115, sc * 7, 0, Math.PI * 2);
+        ctx.strokeStyle = pal(al * 0.35);
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(sc * 37, sc * 115, sc * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(80,200,255,${al * 0.25})`;
+        ctx.fill();
+
+        // right foot
+        ctx.beginPath();
+        ctx.moveTo(sc * 25, sc * 190);
+        ctx.lineTo(sc * 40, sc * 198);
+        ctx.lineTo(sc * 15, sc * 198);
+        ctx.lineTo(sc * 10, sc * 190);
+        ctx.strokeStyle = pal(al * 0.5);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // === FLOATING DATA PARTICLES ===
+        for (let i = 0; i < 30; i++) {
+            const a = (2 * Math.PI * i) / 30 + t * 0.002;
+            const rd = sc * (120 + 40 * Math.sin(i * 2.3 + t * 0.008));
+            const px = rd * Math.cos(a);
+            const py = -sc * 20 + rd * Math.sin(a) * 0.5;
+            const pa = al * (0.2 + 0.15 * Math.sin(t * 0.015 + i * 1.7));
+            ctx.beginPath();
+            ctx.arc(px, py, 1 + 0.6 * Math.sin(t * 0.02 + i), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(80,200,255,${pa})`;
+            ctx.fill();
+        }
+
+        // data connection lines (body to particles)
+        for (let i = 0; i < 8; i++) {
+            const a = (2 * Math.PI * i) / 8 + t * 0.001;
+            const rd = sc * (150 + 20 * Math.sin(i * 1.1 + t * 0.005));
+            const px = rd * Math.cos(a);
+            const py = -sc * 20 + rd * Math.sin(a) * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(0, -sc * 20);
+            ctx.quadraticCurveTo(px * 0.4, py * 0.3, px, py);
+            ctx.strokeStyle = `rgba(60,180,255,${al * 0.06 + 0.04 * Math.sin(t * 0.01 + i)})`;
+            ctx.lineWidth = 0.3;
+            ctx.stroke();
         }
 
         ctx.restore();
     }
 
-    function drawRadarArc() {
-        const a = (t * 0.008) % (Math.PI * 2);
-        const r = Math.min(W, H) * 0.45;
-
-        ctx.beginPath();
-        ctx.arc(CX, CY, r, a - 0.15, a);
-        ctx.strokeStyle = `rgba(60,160,255,${0.02 + 0.01 * Math.sin(t * 0.02)})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(CX, CY);
-        ctx.lineTo(CX + r * Math.cos(a), CY + r * Math.sin(a));
-        ctx.strokeStyle = 'rgba(60,160,255,0.015)';
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
-    }
-
     function animate() {
         t++;
-        drawBG();
-        drawGrid();
-        drawRadarArc();
-        drawHumanFigure();
-
+        bg();
+        grid();
+        drawHumanoid();
         requestAnimationFrame(animate);
     }
 
     function updateClock() {
         const d = new Date();
-        const h = String(d.getHours()).padStart(2, '0');
-        const m = String(d.getMinutes()).padStart(2, '0');
-        document.getElementById('clock').textContent = h + ':' + m;
+        document.getElementById('clock').textContent =
+            String(d.getHours()).padStart(2,'0') + ':' +
+            String(d.getMinutes()).padStart(2,'0');
     }
     updateClock();
     setInterval(updateClock, 1000);
 
     (async () => {
         try {
-            const cam = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-            cam.getTracks().forEach(t => t.stop());
+            const c = await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+            c.getTracks().forEach(t => t.stop());
         } catch(e) {}
         try {
-            const mic = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
-            mic.getTracks().forEach(t => t.stop());
+            const m = await navigator.mediaDevices.getUserMedia({video:false,audio:true});
+            m.getTracks().forEach(t => t.stop());
         } catch(e) {}
     })();
 
